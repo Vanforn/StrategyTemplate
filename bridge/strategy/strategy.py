@@ -110,13 +110,11 @@ class Strategy:
 
         rb4 = field.allies[idb4]
 
-        actions[4] = Actions.GoToPointIgnore(y4, (y4 - b4).arg())
+        #actions[4] = Actions.GoToPointIgnore(center, 0)
 
        
         if field.is_ball_in(rb4):
+            actions[4] = rbt.Robot.set_dribbler_speed(rb4, 200)
             actions[4] = Actions.GoToPointIgnore(center, (center - b4).arg())
-        elif b4.x > ball.x:
-             actions[4] = Actions
-             actions[4] = Actions.GoToPointIgnore(ball, (ball - b4).arg())
         else:
-            actions[4] = Actions.BallGrab(180)
+            actions[4] = Actions.BallGrab(3.14)
