@@ -80,3 +80,42 @@ class Strategy:
         - actions[9] = Actions.BallGrab(0.0)
                 The robot number 9 grabs the ball at an angle of 0.0 (it looks to the right, along the OX axis)
         """
+        # idx = 0
+        # ally_pos = field.allies(idx)
+        #get_line_intersection
+        # ball_pos = field.ball.get_pos()
+        # print((ally_pos - ball_pos) / 2)
+
+        # idxB0 = 0
+        # idxB1 = 1
+        # idxY0 = 0
+        # b0 = field.allies[idxB0].get_pos()
+        # b1 = field.allies[idxB1].get_pos()
+        # y0 = field.enemies[idxY0].get_pos()
+        # ball = field.ball.get_pos()
+        # point = aux.get_line_intersection(b0, b1, y0, ball, 'LL')
+        # print(point)
+
+        idb4 = 4
+        b4 = field.allies[idb4].get_pos()
+
+        idy4 = 4
+        y4 = field.enemies[idy4].get_pos()
+
+        ball = field.ball.get_pos()
+        center = field.ally_goal.center
+        # point =  aux.closest_point_on_line(center, ball, b4, 'S')
+        # print(point)
+
+        rb4 = field.allies[idb4]
+
+        actions[4] = Actions.GoToPointIgnore(y4, (y4 - b4).arg())
+
+       
+        if field.is_ball_in(rb4):
+            actions[4] = Actions.GoToPointIgnore(center, (center - b4).arg())
+        elif b4.x > ball.x:
+             actions[4] = Actions
+             actions[4] = Actions.GoToPointIgnore(ball, (ball - b4).arg())
+        else:
+            actions[4] = Actions.BallGrab(180)
