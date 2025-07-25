@@ -18,7 +18,8 @@ class Strategy:
         self,
     ) -> None:
         self.we_active = False
-
+        self.count = 0
+        self.id = 1
     def process(self, field: fld.Field) -> list[Optional[Action]]:
         """Game State Management"""
         if field.game_state not in [GameStates.KICKOFF, GameStates.PENALTY]:
@@ -99,22 +100,68 @@ class Strategy:
 
         idb4 = 4
         b4 = field.allies[idb4].get_pos()
+        rb4 = field.allies[idb4]
+        alf4 = 3.14 / 4 * idb4 + time() / 3
 
-        idy4 = 4
-        y4 = field.enemies[idy4].get_pos()
+        alf = self.count / 180 * 3.14
+
+        idb3 = 3
+        b3 = field.allies[idb3].get_pos()
+
+        idb0 = 0
+        b0 = field.allies[idb0].get_pos()
+
+        idy0 = 0
+        y0 = field.enemies[idy0].get_pos()
+
+        idb5 = 5
+        b5 = field.allies[idb5].get_pos()
+
 
         ball = field.ball.get_pos()
         center = field.ally_goal.center
+        a_up = field.ally_goal.frw_up
+        a_down = field.ally_goal.frw_down
+        e_up = field.enemy_goal.frw_up
+        e_down = field.enemy_goal.frw_down
+
+        #vec = (y0 - b0) / 8
+        vec = aux.Point(500, 0)
+        vec = aux.rotate(vec, alf4)
+
+        actions[5] = Actions.GoToPointIgnore(ball, alf)
+        actions[0] = Actions.GoToPointIgnore(ball, alf)
+        #actions[4] = Actions.GoToPointIgnore(ball + vec, alf)
+
+        self.count += 10
+        if self.count >= 360:
+            self.count = 0
+
+        if self.id == 1:
+            actions[4] = Actions.GoToPointIgnore(a_up, alf)
+            if a_up.x - 10 < b4.x < a_up.x + 10 and a_up.y - 10 < b4.y < a_up.y + 10:
+                self.id = 2
+        elif self.id == 2:
+            actions[4] = Actions.GoToPointIgnore(a_down, alf)
+            if a_down.x - 10 < b4.x < a_down.x + 10 and a_down.y - 10 < b4.y < a_down.y + 10:
+                self.id = 3
+        elif self.id == 3:
+            actions[4] = Actions.GoToPointIgnore(e_up, alf)
+            if e_up.x - 10 < b4.x < e_up.x + 10 and e_up.y - 10 < b4.y < e_up.y + 10:
+                self.id = 4
+        elif self.id == 4:
+            actions[4] = Actions.GoToPointIgnore(e_down, alf)
+            if e_down.x - 10 < b4.x < e_down.x + 10 and e_down.y - 10 < b4.y < e_down.y + 10:
+                self.id = 1
+        
         # point =  aux.closest_point_on_line(center, ball, b4, 'S')
         # print(point)
 
-        rb4 = field.allies[idb4]
 
         #actions[4] = Actions.GoToPointIgnore(center, 0)
 
        
-        if field.is_ball_in(rb4):
-            actions[4] = rbt.Robot.set_dribbler_speed(rb4, 200)
-            actions[4] = Actions.GoToPointIgnore(center, (center - b4).arg())
-        else:
-            actions[4] = Actions.BallGrab(3.14)
+        # if  ball.x + 10 > b4.x > ball.x + 5 and  ball.y - 3 < b4.y < ball.y + 3:
+        #     actions[4] = Actions.GoToPointIgnore(center, (center - b4).arg())
+        # else:
+        #    actions[4] = Actions.BallGrab(3.14)
