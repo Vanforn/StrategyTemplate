@@ -174,50 +174,9 @@ git rebase upstream/master
         # if self.id == 2 and  (point - b4).mag() <= 100:
         #     self.id = 1
         # print(self.id)
-        visStart = aux.Point(100, 0)
-        aB0 = rb0.get_angle()
-        aY0 = ry0.get_angle()
-        aY4 = ry4.get_angle()
-        b0Vis = aux.rotate(visStart, aB0) + b0
-        y0Vis = aux.rotate(visStart, aY0) + y0
-        y4Vis = aux.rotate(visStart, aY4) + y4
-        point1 = aux.get_line_intersection(b0, b0Vis, y0, y0Vis, "RR")
-
-        point2 = aux.get_line_intersection(b0, b0Vis, y4, y4Vis, "RR")
-
-        point3 = aux.get_line_intersection(y0, y0Vis, y4, y4Vis, "RR")
-
-
-        if point1 is None or point2 is None or point3 is None:
-            field.strategy_image.draw_line(b0, y0)
-            field.strategy_image.draw_line(b0, y4)
-            field.strategy_image.draw_line(y4, y0)
+        point = aux.closest_point_on_line(b0, ball, b4, "R")
+        if (point - b0).mag() >= 500:
+            actions[4] = Actions.GoToPointIgnore(point, (ball - b4).arg())
         else:
-            med = (point1 + point3) / 2
-            point_ort = (point2  + med * 2) / 3
-
-            med2 = aux.get_line_intersection(point2, point_ort, y0, y0Vis, "RR")
-
-            med1 = aux.get_line_intersection(point1, point_ort, y0, y0Vis, "RR")
-
-            med3 = aux.get_line_intersection(point3, point_ort,b0, b0Vis, "RR")
-            if med1 is not None and med2 is not None and med3 is not None:
-                field.strategy_image.draw_circle(med1)
-
-                field.strategy_image.draw_circle(med2)
-
-                field.strategy_image.draw_circle(med3)
-
-            field.strategy_image.draw_line(b0, point1)
-            field.strategy_image.draw_line(y0, point1)
-            field.strategy_image.draw_circle(point1)
-
-            field.strategy_image.draw_line(b0,point2)
-            field.strategy_image.draw_line(y4, point2)
-            field.strategy_image.draw_circle(point2)
-
-            field.strategy_image.draw_line(y0, point3)
-            field.strategy_image.draw_line(y4, point3)
-            field.strategy_image.draw_circle(point3)
-
-            field.strategy_image.draw_circle(point_ort)
+            actions[4] = Actions.GoToPoint(b0 + aux.rotate(aux.Point(500, 0), (ball - b0).arg()), (ball - b4).arg())
+            print(1)
