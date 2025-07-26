@@ -109,6 +109,8 @@ git rebase upstream/master
         # point = aux.get_line_intersection(b0, b1, y0, ball, 'LL')
         # print(point)
 
+        enemies = field.active_enemies(True)
+
         idb4 = 4
         b4 = field.allies[idb4].get_pos()
         rb4 = field.allies[idb4]
@@ -120,8 +122,8 @@ git rebase upstream/master
         ry4 = field.enemies[idy4]
 
         idb0 = 0
-        b0 = field.allies[idb0].get_pos()
-        rb0 = field.allies[idb0]
+        b0 = field.enemies[idb0].get_pos()
+        rb0 = field.enemies[idb0]
 
         idy0 = 0
         y0 = field.enemies[idy0].get_pos()
@@ -174,9 +176,37 @@ git rebase upstream/master
         # if self.id == 2 and  (point - b4).mag() <= 100:
         #     self.id = 1
         # print(self.id)
-        point = aux.closest_point_on_line(b0, ball, b4, "R")
-        if (point - b0).mag() >= 500:
-            actions[4] = Actions.GoToPointIgnore(point, (ball - b4).arg())
-        else:
-            actions[4] = Actions.GoToPoint(b0 + aux.rotate(aux.Point(500, 0), (ball - b0).arg()), (ball - b4).arg())
-            print(1)
+        rb = fld.find_nearest_robot(ball, enemies)
+        robot = rb.get_pos()
+        min_ = 9999999999
+        bot_: rbt.Robot = None
+        for bot in enemies:
+            p = aux.closest_point_on_line(robot, ball, bot.get_pos(), "R")
+            if (p - bot.get_pos()).mag() < min_ and bot != rb:
+                min_ = (p - bot.get_pos()).mag()
+                bot_ = bot
+
+        if bot_ is not None:
+            point = aux.closest_point_on_line(robot, bot_.get_pos(), b4)
+            field.strategy_image.draw_circle(point, (0, 255, 255), 50)
+            field.strategy_image.draw_circle(bot_.get_pos(), (255, 255, 255), 50)
+            if (point - robot).mag() >= 500:
+                actions[4] = Actions.GoToPointIgnore(point, (ball - b4).arg())
+            else:
+                actions[4] = Actions.GoToPoint(point, (ball - b4).arg())
+            #actions[5] = Actions.GoToPointIgnore(ball, spin)
+            speed = b4
+
+
+
+
+
+        # a = aux.Point(0, 0)
+        # secondPoint = aux.rotate(a, (ball - b4).arg())
+        # point = aux.closest_point_on_line(ball, secondPoint + ball, b4, "R")
+        # if b4.x > ball. x + 110 and  ball.y + 10 > b4.x > ball.y - 10:
+        #     actions[4] = Actions.GoToPointIgnore(center, (center - b4).arg())
+
+        # else:
+        #     actions[4] = Actions.GoToPointIgnore(secondPoint + ball, (ball - b4).arg())
+
