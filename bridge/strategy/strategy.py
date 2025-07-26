@@ -133,7 +133,12 @@ git rebase upstream/master
         b5 = field.allies[idb5].get_pos()
 
         ball = field.ball.get_pos()
+        #field.strategy_image.draw_circle(ball, (0, 255, 255), 50)
+        
+
         center = field.enemy_goal.center
+        frw = field.enemy_goal.frw
+
         a_up = field.ally_goal.frw_up
         a_down = field.ally_goal.frw_down
         ac_up = field.ally_goal.center_up
@@ -176,37 +181,63 @@ git rebase upstream/master
         # if self.id == 2 and  (point - b4).mag() <= 100:
         #     self.id = 1
         # print(self.id)
-        rb = fld.find_nearest_robot(ball, enemies)
-        robot = rb.get_pos()
-        min_ = 9999999999
-        bot_: rbt.Robot = None
-        for bot in enemies:
-            p = aux.closest_point_on_line(robot, ball, bot.get_pos(), "R")
-            if (p - bot.get_pos()).mag() < min_ and bot != rb:
-                min_ = (p - bot.get_pos()).mag()
-                bot_ = bot
 
-        if bot_ is not None:
-            point = aux.closest_point_on_line(robot, bot_.get_pos(), b4)
-            field.strategy_image.draw_circle(point, (0, 255, 255), 50)
-            field.strategy_image.draw_circle(bot_.get_pos(), (255, 255, 255), 50)
-            if (point - robot).mag() >= 500:
-                actions[4] = Actions.GoToPointIgnore(point, (ball - b4).arg())
-            else:
-                actions[4] = Actions.GoToPoint(point, (ball - b4).arg())
-            #actions[5] = Actions.GoToPointIgnore(ball, spin)
-            speed = b4
+        # rb = fld.find_nearest_robot(ball, enemies)
+        # robot = rb.get_pos()
+        # min_ = 9999999999
+        # bot_: rbt.Robot = None
+        # for bot in enemies:
+        #     p = aux.closest_point_on_line(robot, ball, bot.get_pos(), "R")
+        #     if (p - bot.get_pos()).mag() < min_ and bot != rb:
+        #         min_ = (p - bot.get_pos()).mag()
+        #         bot_ = bot
+        # if bot_ is not None:
+        #     point = aux.closest_point_on_line(robot, bot_.get_pos(), b4)
+        #     field.strategy_image.draw_circle(point, (0, 255, 255), 50)
+        #     field.strategy_image.draw_circle(robot, (0, 0, 0), 50)
+        #     field.strategy_image.draw_circle(bot_.get_pos(), (255, 255, 255), 50)
+        #     if (point - robot).mag() >= 500:
+        #         actions[4] = Actions.GoToPointIgnore(point, (ball - b4).arg())
+        #     else:
+        #         actions[4] = Actions.GoToPointIgnore(point, (ball - b4).arg())
+        #     #actions[5] = Actions.GoToPointIgnore(ball, spin)
+        #     speed = b4
 
+        # min_ = 9999999999
+        # yes = 0
+        # bot_: rbt.Robot = None
+        # p = aux.Point(0, 0)
+        # for bot in enemies:
+        #     p = aux.closest_point_on_line(b4, ball, bot.get_pos(), "S")
+        #     if (p - bot.get_pos()).mag() < min_:
+        #         min_ = (p - bot.get_pos()).mag()
+        #         bot_ = bot
 
+        # if bot_ is not None:
+        #     field.strategy_image.draw_circle(aux.closest_point_on_line(b4, ball, bot_.get_pos(), "S"), (0, 0, 0), 50)
+        #     b = bot_.get_pos()
+        #     if min_ <= 200:
+        #         yes = 1
+        #     else:
+        #         yes = 0
+            
+        #     if aux.get_angle_between_points(b4, ball, b) < 0 and yes == 1:
+        #         vec = aux.rotate(b4 - ball, 10 / 80 * 3.14)
+        #         actions[4] = Actions.GoToPointIgnore(ball + vec, (ball - b4).arg())
+        #     elif aux.get_angle_between_points(b4, ball, b) > 0 and yes == 1:
+        #         vec = aux.rotate(b4 - ball, -(10 / 80 * 3.14))
+        #         actions[4] = Actions.GoToPointIgnore(ball + vec, (ball - b4).arg())
+        #     if b4.x < 0:
+        #         print(b4.x)
+        #         actions[4] = Actions.GoToPointIgnore(b4 + aux.Point(1000, 0), (ball - b4).arg())
+        #     # actions[5] = Actions.GoToPointIgnore(ball, spin)
 
-
-
-        # a = aux.Point(0, 0)
-        # secondPoint = aux.rotate(a, (ball - b4).arg())
-        # point = aux.closest_point_on_line(ball, secondPoint + ball, b4, "R")
-        # if b4.x > ball. x + 110 and  ball.y + 10 > b4.x > ball.y - 10:
-        #     actions[4] = Actions.GoToPointIgnore(center, (center - b4).arg())
-
-        # else:
-        #     actions[4] = Actions.GoToPointIgnore(secondPoint + ball, (ball - b4).arg())
-
+        vec = aux.Point(110, 0)
+        vec = aux.rotate(vec, aux.get_angle_between_points(aux.Point(0,0), center, ball))
+        if (vec + ball - b4).mag() >= 50:
+            print((vec + ball - b4).mag())
+            actions[4] = Actions.GoToPoint(ball + vec, (ball - b4).arg())
+            field.strategy_image.draw_circle(ball + vec, (0, 0, 0), 50)
+        else:
+            actions[4] = Actions.GoToPoint(b4 + aux.rotate(aux.Point(100,0), aux.get_angle_between_points(vec + b4, b4, frw)), (ball - b4).arg(), True, True)
+            field.strategy_image.draw_circle(frw, (255, 255, 0), 50)
