@@ -112,17 +112,20 @@ git rebase upstream/master
         idb4 = 4
         b4 = field.allies[idb4].get_pos()
         rb4 = field.allies[idb4]
-        alf4 = 3.14 / 4 * idb4 + time() / 3
 
         spin = self.count / 180 * 3.14
-        # idb3 = 3
-        # b3 = field.allies[idb3].get_pos()
+
+        idy4 = 4
+        y4 = field.enemies[idy4].get_pos()
+        ry4 = field.enemies[idy4]
 
         idb0 = 0
         b0 = field.allies[idb0].get_pos()
+        rb0 = field.allies[idb0]
 
         idy0 = 0
         y0 = field.enemies[idy0].get_pos()
+        ry0 = field.enemies[idy0]
 
         idb5 = 5
         b5 = field.allies[idb5].get_pos()
@@ -150,8 +153,6 @@ git rebase upstream/master
         
 
         #vec = (y0 - b0) / 8
-        vec = aux.Point(500, 0)
-        vec = aux.rotate(vec, alf4)
 
         
         #actions[0] = Actions.GoToPointIgnore(ball, alf)
@@ -162,41 +163,61 @@ git rebase upstream/master
             self.count = 0
 
 
-        match self.id:
-            case 1:
-                actions[4] = Actions.GoToPointIgnore(ball, 0)
-            case 2:
-                actions[4] = Actions.GoToPointIgnore(point, 0)
-                
-        if self.id == 1 and (ball - b4).mag() <= 120:
-            self.id = 2
-        if self.id == 2 and  (point - b4).mag() <= 100:
-            self.id = 1
-        print(self.id)
-        
+        # match self.id:
+        #     case 1:
+        #         actions[4] = Actions.GoToPointIgnore(ball, spin)
+        #     case 2:
+        #         actions[4] = Actions.GoToPointIgnore(point, spin)
+
+        # if self.id == 1 and (ball - b4).mag() <= 120:
+        #     self.id = 2
+        # if self.id == 2 and  (point - b4).mag() <= 100:
+        #     self.id = 1
+        # print(self.id)
+        visStart = aux.Point(100, 0)
+        aB0 = rb0.get_angle()
+        aY0 = ry0.get_angle()
+        aY4 = ry4.get_angle()
+        b0Vis = aux.rotate(visStart, aB0) + b0
+        y0Vis = aux.rotate(visStart, aY0) + y0
+        y4Vis = aux.rotate(visStart, aY4) + y4
+        point1 = aux.get_line_intersection(b0, b0Vis, y0, y0Vis, "RR")
+
+        point2 = aux.get_line_intersection(b0, b0Vis, y4, y4Vis, "RR")
+
+        point3 = aux.get_line_intersection(y0, y0Vis, y4, y4Vis, "RR")
 
 
+        if point1 is None or point2 is None or point3 is None:
+            field.strategy_image.draw_line(b0, y0)
+            field.strategy_image.draw_line(b0, y4)
+            field.strategy_image.draw_line(y4, y0)
+        else:
+            med = (point1 + point3) / 2
+            point_ort = (point2  + med * 2) / 3
 
+            med2 = aux.get_line_intersection(point2, point_ort, y0, y0Vis, "RR")
 
-        # actions[4] = Actions.GoToPointIgnore(ball, 0)
-        # actions[4] = Actions.GoToPointIgnore(center, 0)
+            med1 = aux.get_line_intersection(point1, point_ort, y0, y0Vis, "RR")
 
-        # to_goal = center - b4
-        # if field.is_ball_in(rb4):
-        #     actions[4] = Actions.GoToPointIgnore(b4 + to_goal, to_goal.arg())
-        # else:
-        #     actions[4] = Actions.GoToPointIgnore(ball, (ball - b4).arg())
+            med3 = aux.get_line_intersection(point3, point_ort,b0, b0Vis, "RR")
+            if med1 is not None and med2 is not None and med3 is not None:
+                field.strategy_image.draw_circle(med1)
 
-        
-        # point =  aux.closest_point_on_line(center, ball, b4, 'S')
-        # print(point)
+                field.strategy_image.draw_circle(med2)
 
+                field.strategy_image.draw_circle(med3)
 
-        #actions[4] = Actions.GoToPointIgnore(center, 0)
+            field.strategy_image.draw_line(b0, point1)
+            field.strategy_image.draw_line(y0, point1)
+            field.strategy_image.draw_circle(point1)
 
-       
-        # if  ball.x + 10 > b4.x > ball.x + 5 and  ball.y - 3 < b4.y < ball.y + 3:
-        #     actions[4] = Actions.GoToPointIgnore(center, (center - b4).arg())
-        # else:
-        #    actions[4] = Actions.BallGrab(3.14)
+            field.strategy_image.draw_line(b0,point2)
+            field.strategy_image.draw_line(y4, point2)
+            field.strategy_image.draw_circle(point2)
 
+            field.strategy_image.draw_line(y0, point3)
+            field.strategy_image.draw_line(y4, point3)
+            field.strategy_image.draw_circle(point3)
+
+            field.strategy_image.draw_circle(point_ort)
