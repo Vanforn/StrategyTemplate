@@ -86,15 +86,13 @@ class Strategy:
         Examples of robot control:
         - actions[2] = Actions.GoToPoint(aux.Point(1000, 500), math.pi / 2)
                 The robot number 2 will go to the point (1000, 500), looking in the direction π/2 (up, along the OY axis)
-
+git rebase upstream/master
         - actions[3] = Actions.Kick(field.enemy_goal.center)
                 The robot number 3 will hit the ball to 'field.enemy_goal.center' (to the center of the enemy goal)
 
         - actions[9] = Actions.BallGrab(0.0)
                 The robot number 9 grabs the ball at an angle of 0.0 (it looks to the right, along the OX axis)
         """
-<<<<<<< HEAD
-=======
         # idx = 0
         # ally_pos = field.allies(idx)
         #get_line_intersection
@@ -133,62 +131,55 @@ class Strategy:
         center = field.enemy_goal.center
         a_up = field.ally_goal.frw_up
         a_down = field.ally_goal.frw_down
+        ac_up = field.ally_goal.center_up
+        ac_down = field.ally_goal.center_down
         e_up = field.enemy_goal.frw_up
         e_down = field.enemy_goal.frw_down
+        ec_up = field.enemy_goal.center_up
+        ec_down = field.enemy_goal.center_down
+        hull1 = field.ally_goal.hull
+        hull2 = field.enemy_goal.hull
+
+        point1 = aux.nearest_point_in_poly(b4, hull1)
+        point2 = aux.nearest_point_in_poly(b4, hull2)
+
+        if (point1 - b4).mag() <= (point2 - b4).mag():
+            point = point1
+        else:
+            point = point2
+        
 
         #vec = (y0 - b0) / 8
         vec = aux.Point(500, 0)
         vec = aux.rotate(vec, alf4)
 
-        actions[5] = Actions.GoToPointIgnore(ball, spin)
+        
         #actions[0] = Actions.GoToPointIgnore(ball, alf)
         #actions[4] = Actions.GoToPointIgnore(ball + vec, alf)
 
         self.count += 10
         if self.count >= 360:
             self.count = 0
-        if True:
-            Actions.GoToPointIgnore(center, 0)
-        r = 100
-        if 1 <= self.id <= 3:
-            point1 = aux.Point(b0.x - 50, b0.y + 800)
-            point2 = aux.Point(b0.x + 800, b0.y)
-            point3 = aux.Point(b0.x - 50, b0.y - 800)
-        else:
-            point1 = aux.Point(y0.x + 50, y0.y + 800)
-            point2 = aux.Point(y0.x - 800, y0.y)
-            point3 = aux.Point(y0.x + 50, y0.y - 800)
 
-        rotate = (y0 - b0).arg()
-        point1 = aux.rotate(point1, rotate)
-        point2 = aux.rotate(point2, rotate)
-        point3 = aux.rotate(point3, rotate)
 
-        if self.id == 1 or self.id == 4:
-            l = point1 - b4
-            actions[4] = Actions.GoToPointIgnore(point1, l.arg())
-            if l.mag() <= r:
-                if self.id == 1:
-                    self.id = 2
-                else:
-                    self.id = 5
-        elif self.id == 2 or self.id == 5:
-            l = point2- b4
-            actions[4] = Actions.GoToPointIgnore(point2, l.arg())
-            if l.mag() <= r:
-                if self.id == 2:
-                    self.id = 3
-                else:
-                    self.id = 6
-        elif self.id == 3 or self.id == 6:
-            l = point3 - b4
-            actions[4] = Actions.GoToPointIgnore(point3, l.arg())
-            if l.mag() <= r:
-                if self.id == 3:
-                    self.id = 4
-                else:
-                    self.id = 1
+        match self.id:
+            case 1:
+                actions[4] = Actions.GoToPointIgnore(ball, 0)
+            case 2:
+                actions[4] = Actions.GoToPointIgnore(point, 0)
+                
+        if self.id == 1 and (ball - b4).mag() <= 120:
+            self.id = 2
+        if self.id == 2 and  (point - b4).mag() <= 100:
+            self.id = 1
+        print(self.id)
+        
 
+
+
+
+        # actions[4] = Actions.GoToPointIgnore(ball, 0)
+        # actions[4] = Actions.GoToPointIgnore(center, 0)
 
         # to_goal = center - b4
         # if field.is_ball_in(rb4):
