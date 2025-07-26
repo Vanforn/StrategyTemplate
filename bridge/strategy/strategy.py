@@ -116,7 +116,7 @@ class Strategy:
         rb4 = field.allies[idb4]
         alf4 = 3.14 / 4 * idb4 + time() / 3
 
-        alf = self.count / 180 * 3.14
+        spin = self.count / 180 * 3.14
         # idb3 = 3
         # b3 = field.allies[idb3].get_pos()
 
@@ -126,8 +126,9 @@ class Strategy:
         idy0 = 0
         y0 = field.enemies[idy0].get_pos()
 
-        # idb5 = 5
-        # b5 = field.allies[idb5].get_pos()
+        idb5 = 5
+        b5 = field.allies[idb5].get_pos()
+
         ball = field.ball.get_pos()
         center = field.enemy_goal.center
         a_up = field.ally_goal.frw_up
@@ -139,7 +140,7 @@ class Strategy:
         vec = aux.Point(500, 0)
         vec = aux.rotate(vec, alf4)
 
-        #actions[5] = Actions.GoToPointIgnore(ball, alf)
+        actions[5] = Actions.GoToPointIgnore(ball, spin)
         #actions[0] = Actions.GoToPointIgnore(ball, alf)
         #actions[4] = Actions.GoToPointIgnore(ball + vec, alf)
 
@@ -157,10 +158,12 @@ class Strategy:
             point1 = aux.Point(y0.x + 50, y0.y + 800)
             point2 = aux.Point(y0.x - 800, y0.y)
             point3 = aux.Point(y0.x + 50, y0.y - 800)
-        rotate = (b0 - y0).arg()
+
+        rotate = (y0 - b0).arg()
         point1 = aux.rotate(point1, rotate)
         point2 = aux.rotate(point2, rotate)
         point3 = aux.rotate(point3, rotate)
+
         if self.id == 1 or self.id == 4:
             l = point1 - b4
             actions[4] = Actions.GoToPointIgnore(point1, l.arg())
