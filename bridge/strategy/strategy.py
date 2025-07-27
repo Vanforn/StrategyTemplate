@@ -109,53 +109,6 @@ git rebase upstream/master
         # point = aux.get_line_intersection(b0, b1, y0, ball, 'LL')
         # print(point)
 
-        enemies = field.active_enemies(True)
-
-        idb0 = 0
-        b0 = field.enemies[idb0].get_pos()
-        rb0 = field.enemies[idb0]
-
-        idb1 = 1
-        b1 = field.allies[idb1].get_pos()
-        rb1 = field.allies[idb1]
-
-        idb2 = 2
-        b2 = field.allies[idb2].get_pos()
-        rb2 = field.allies[idb2]
-
-        spin = self.count / 180 * 3.14
-
-
-        idy0 = 0
-        y0 = field.enemies[idy0].get_pos()
-        ry0 = field.enemies[idy0]
-
-
-        ball = field.ball.get_pos()
-        #field.strategy_image.draw_circle(ball, (0, 255, 255), 50)
-        
-
-        center = field.enemy_goal.center
-        frw = field.enemy_goal.frw
-
-        a_up = field.ally_goal.frw_up
-        a_down = field.ally_goal.frw_down
-        ac_up = field.ally_goal.center_up
-        ac_down = field.ally_goal.center_down
-
-        e_up = field.enemy_goal.frw_up
-        e_down = field.enemy_goal.frw_down
-        ec_up = field.enemy_goal.center_up
-        ec_down = field.enemy_goal.center_down
-
-        hull1 = field.ally_goal.hull
-        hull2 = field.enemy_goal.hull
-
-        up = field.enemy_goal.up
-        down = field.enemy_goal.down
-
-        fup = field.enemy_goal.frw_up
-        fdown = field.enemy_goal.frw_down
 
         # point1 = aux.nearest_point_in_poly(b4, hull1)
         # point2 = aux.nearest_point_in_poly(b4, hull2)
@@ -229,55 +182,225 @@ git rebase upstream/master
             
         #     if yes == 1:
         #actions[1] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
-        
-        pointDown = field.enemy_goal.eye_up
-        pointUp = -field.enemy_goal.eye_up
-        yesUp = 0
-        yesDown= 0
-        for bot in enemies:
-            p1 = aux.closest_point_on_line(b2, up, bot.get_pos(), "S")
-            p2 = aux.closest_point_on_line(b2, down, bot.get_pos(), "S")
-            if (p1 - bot.get_pos()).mag() < 200:
-                yesUp = 1
-            elif (p2 - bot.get_pos()).mag() < 200:
-                yesDown = 1
+        if field.ally_color == const.Color.BLUE:
+            
+            enemies = field.active_enemies(True)
 
-        if (ball - b2).mag() >= 150 and (ball - b2).mag() < (ball - b1).mag():
-            actions[2] = Actions.BallGrab((ball - b2).arg())
-        elif (ball - b2).mag() < 150:
-            if not yesUp:
-                actions[2] =Actions.Kick(up + pointUp)
-            elif not yesDown:
-                actions[2] =Actions.Kick(down + pointDown)
+            idb0 = 0
+            b0 = field.enemies[idb0].get_pos()
+            rb0 = field.enemies[idb0]
+
+            idb1 = 1
+            b1 = field.allies[idb1].get_pos()
+            rb1 = field.allies[idb1]
+
+            idb2 = 2
+            b2 = field.allies[idb2].get_pos()
+            rb2 = field.allies[idb2]
+
+            spin = self.count / 180 * 3.14
+
+
+            idy0 = 0
+            y0 = field.enemies[idy0].get_pos()
+            ry0 = field.enemies[idy0]
+
+
+            ball = field.ball.get_pos()
+            #field.strategy_image.draw_circle(ball, (0, 255, 255), 50)
+            
+
+            center = field.enemy_goal.center
+            frw = field.enemy_goal.frw
+
+            a_up = field.ally_goal.frw_up
+            a_down = field.ally_goal.frw_down
+            ac_up = field.ally_goal.center_up
+            ac_down = field.ally_goal.center_down
+
+            e_up = field.enemy_goal.frw_up
+            e_down = field.enemy_goal.frw_down
+            ec_up = field.enemy_goal.center_up
+            ec_down = field.enemy_goal.center_down
+
+            hull1 = field.ally_goal.hull
+            hull2 = field.enemy_goal.hull
+
+            up = field.enemy_goal.up
+            down = field.enemy_goal.down
+
+            fup = field.enemy_goal.frw_up
+            fdown = field.enemy_goal.frw_down
+
+            #bot 1 closer
+            bot_ , min_ = Find_closest_bot_line(enemies, b1, b2, "S")
+            enemyClose = 0
+            if const.ENEMY_GK == 0:
+                enemyClose = 2
+            
+            bEnemy = field.enemies[enemyClose].get_pos()
+            rbEnemy = field.enemies[enemyClose]
+
+            if (bEnemy - ball).mag() > 400:
+                rad = 400
             else:
-                actions[2] =Actions.Kick(b1, const.VOLTAGE_SHOOT ,True)
-        else: 
-            # if const.ENEMY_GK == 0:
-            actions[2] = Actions.GoToPoint(fdown + aux.Point(-300, -300) ,(ball - b2).arg())
-            print("b2")
+                rad = (bEnemy - ball).mag() - 50
 
-        yesUp = 0
-        yesDown= 0
-        for bot in enemies:
-            p1 = aux.closest_point_on_line(b1, up, bot.get_pos(), "S")
-            p2 = aux.closest_point_on_line(b1, down, bot.get_pos(), "S")
-            if (p1 - bot.get_pos()).mag() < 200:
-                yesUp = 1
-            elif (p2 - bot.get_pos()).mag() < 200:
-                yesDown = 1
+            field.strategy_image.telemetry.append(["bEnemy- b1", f'{(bEnemy - b1).mag()}'])
 
-        if (ball - b1).mag() >= 150 and (ball - b1).mag() < (ball - b2).mag():
-            actions[1] = Actions.BallGrab((ball - b1).arg())
-        elif (ball - b1).mag() < 150:
-            if not yesUp:
-                actions[1] =Actions.Kick(up + pointUp)
-            elif not yesDown:
-                actions[1] =Actions.Kick(down + pointDown)
+            
+            point = aux.nearest_point_on_circle(ball, bEnemy, rad)
+            if rad < 400 and min_ > 200:
+                actions[1] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
+            elif rad < 400 and min_ < 200:
+                if aux.get_angle_between_points(bot_.get_pos(), b2, b1) > 0:
+                    b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() + 3.14 / 5)
+                else:
+                    b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() - 3.14 / 5)
+                actions[2] = Actions.GoToPoint(aux.nearest_point_on_circle(b2, bEnemy, rad), (ball - b2).arg())
             else:
-                actions[1] =Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
-        else: 
-            # if const.ENEMY_GK == 0:
-            actions[1] = Actions.GoToPoint(fup + aux.Point(-300, 300), (ball - b1).arg())
-            print("b1")
+                actions[1] = Actions.GoToPoint(point, (ball - b1).arg())
 
-        
+
+            #bot 2 attacker
+
+            pointDown = field.enemy_goal.eye_up
+            old_b2 = b2
+            pointUp = -field.enemy_goal.eye_up
+            yesUp = 0
+            yesDown= 0
+            for bot in enemies:
+                p1 = aux.closest_point_on_line(b2, up, bot.get_pos(), "S")
+                p2 = aux.closest_point_on_line(b2, down, bot.get_pos(), "S")
+                if (p1 - bot.get_pos()).mag() < 200:
+                    yesUp = 1
+                elif (p2 - bot.get_pos()).mag() < 200:
+                    yesDown = 1
+
+            if (ball - b2).mag() >= 150 and rad >= 400:
+                actions[2] = Actions.BallGrab((ball - b2).arg())
+            elif (ball - b2).mag() < 150:
+                if not yesUp:
+                    self.time += 1
+                    actions[2] = Actions.GoToPoint(ball + aux.rotate(aux.Point(50, 0), ))
+                    if(self.time >= 20):
+                        actions[2] =Actions.Kick(up + pointUp)
+                elif not yesDown:
+                    self.time += 1
+                    actions[2] =Actions.Kick(down + pointDown)
+                else:
+                    actions[2] =Actions.Kick(b1, const.VOLTAGE_SHOOT ,True)
+            elif rad < 400:
+                # if const.ENEMY_GK == 0:
+                bot_ , min_ = Find_closest_bot_line(enemies, b1, b2, "S")
+                if min_ < 200:
+                    if aux.get_angle_between_points(bot_.get_pos(), b2, b1) > 0:
+                        b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() + 3.14 / 5)
+                    else:
+                        b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() - 3.14 / 5)
+                field.strategy_image.draw_circle(aux.nearest_point_on_circle(b2, b1, 1000), (0, 0, 0), 50)
+                field.strategy_image.draw_line(old_b2, b1)
+                actions[2] = Actions.GoToPoint(aux.nearest_point_on_circle(b2, b1, 1000), (ball - b2).arg())
+
+
+
+
+
+            #bot 0 gk
+            
+
+            # yesUp = 0
+            # yesDown= 0
+            # for bot in enemies:
+            #     p1 = aux.closest_point_on_line(b1, up, bot.get_pos(), "S")
+            #     p2 = aux.closest_point_on_line(b1, down, bot.get_pos(), "S")
+            #     if (p1 - bot.get_pos()).mag() < 200:
+            #         yesUp = 1
+            #     elif (p2 - bot.get_pos()).mag() < 200:
+            #         yesDown = 1
+
+            # if (ball - b1).mag() >= 150 and (ball - b1).mag() < (ball - b2).mag():
+            #     actions[1] = Actions.BallGrab((ball - b1).arg())
+            # elif (ball - b1).mag() < 150:
+            #     if not yesUp:
+            #         actions[1] =Actions.Kick(up + pointUp)
+            #     elif not yesDown:
+            #         actions[1] =Actions.Kick(down + pointDown)
+            #     else:
+            #         actions[1] =Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
+            # else: 
+            #     # if const.ENEMY_GK == 0:
+            #     actions[1] = Actions.GoToPoint(fup + aux.Point(-300, 300), (ball - b1).arg())
+            #     print("b1")
+
+        else:
+            enemies = field.active_enemies(True)
+
+            idb0 = 0
+            b0 = field.enemies[idb0].get_pos()
+            rb0 = field.enemies[idb0]
+
+            idb1 = 1
+            b1 = field.allies[idb1].get_pos()
+            rb1 = field.allies[idb1]
+
+            idb2 = 2
+            b2 = field.allies[idb2].get_pos()
+            rb2 = field.allies[idb2]
+
+            spin = self.count / 180 * 3.14
+
+
+            idy0 = 0
+            y0 = field.enemies[idy0].get_pos()
+            ry0 = field.enemies[idy0]
+
+
+            ball = field.ball.get_pos()
+            #field.strategy_image.draw_circle(ball, (0, 255, 255), 50)
+            
+
+            center = field.enemy_goal.center
+            frw = field.enemy_goal.frw
+
+            a_up = field.ally_goal.frw_up
+            a_down = field.ally_goal.frw_down
+            ac_up = field.ally_goal.center_up
+            ac_down = field.ally_goal.center_down
+
+            e_up = field.enemy_goal.frw_up
+            e_down = field.enemy_goal.frw_down
+            ec_up = field.enemy_goal.center_up
+            ec_down = field.enemy_goal.center_down
+
+            hull1 = field.ally_goal.hull
+            hull2 = field.enemy_goal.hull
+
+            up = field.enemy_goal.up
+            down = field.enemy_goal.down
+
+            fup = field.enemy_goal.frw_up
+            fdown = field.enemy_goal.frw_down
+
+            
+
+def Find_closest_bot_line(bots: list[rbt.Robot], p1: aux.Point, p2: aux.Point, type_: str):
+    min_ = 9999999999
+    bot_: rbt.Robot = None
+    p = aux.Point(0, 0)
+    for bot in bots:
+        p = aux.closest_point_on_line(p1, p2, bot.get_pos(), type_)
+        if (p - bot.get_pos()).mag() < min_:
+            min_ = (p - bot.get_pos()).mag()
+            bot_ = bot
+    return bot_, min_
+
+
+# min_ = 9999999999
+#     bot_: rbt.Robot = None
+#     p = aux.Point(0, 0)
+#     for bot in bots:
+#         p = aux.closest_point_on_line(b1, b2, bot.get_pos(), type)
+#         if (p - bot.get_pos()).mag() < min_:
+#             min_ = (p - bot.get_pos()).mag()
+#             bot_ = bot
