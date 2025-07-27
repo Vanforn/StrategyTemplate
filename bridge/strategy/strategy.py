@@ -249,6 +249,7 @@ git rebase upstream/master
             bEnemy = field.enemies[enemyClose].get_pos()
             rbEnemy = field.enemies[enemyClose]
 
+            rad: float
             if (bEnemy - ball).mag() > 400:
                 rad = 400
             else:
@@ -279,14 +280,14 @@ git rebase upstream/master
             for bot in enemies:
                 p1 = aux.closest_point_on_line(b2, upE, bot.get_pos(), "S")
                 p2 = aux.closest_point_on_line(b2, downE, bot.get_pos(), "S")
-                if (p1 - bot.get_pos()).mag() < 200:
+                if (p1 - bot.get_pos()).mag() < 250:
                     yesUp = 1
                 elif (p2 - bot.get_pos()).mag() < 200:
                     yesDown = 1
 
-            if (ball - b2).mag() >= 150 and rad >= 400:
+            if (ball - b2).mag() >= 500 and rad >= 400:
                 actions[2] = Actions.BallGrab((ball - b2).arg())
-            elif (ball - b2).mag() < 150:
+            elif (ball - b2).mag() < 500:
                 if not yesUp:
                     # if (ball - b2).mag() < 250:
                     #     self.time += 1
@@ -296,8 +297,14 @@ git rebase upstream/master
                     actions[2] =Actions.Kick(upE + pointUp)
                         # self.time = 0
                 elif not yesDown:
-                    self.time += 1
-                    actions[2] =Actions.Kick(downE + pointDown)
+                    if  (ball - b2).mag() < 500:
+                        self.time += 1
+                    actions[2] = Actions.GoToPoint(ball + aux.rotate(aux.Point(150, 0), (ball - upE).arg()), (ball - b2).arg())
+                    field.strategy_image.draw_circle(b2, [0, 0, 0], 50)
+                    if self.time >= 100 and (ball - b2).mag() < 150:
+                        actions[2] =Actions.Kick(downE + pointDown)
+                    if (ball - b2).mag() > 500:
+                        self.time = 0
                 else:
                     actions[2] =Actions.Kick(b1, const.VOLTAGE_SHOOT ,True)
             elif rad < 400:
@@ -320,8 +327,8 @@ git rebase upstream/master
             
             point = aux.line_circle_intersect(ball, ball_obj.get_vel(), centerAlly, (upA - centerAlly + (center_upA - upA) / 2).mag(), "R")
             if len(point) == 2:
-                point = aux.find_nearest_point(ball, point)
-                actions[0] = Actions.GoToPointIgnore(point, (ball - b0).arg())
+                point2 = aux.find_nearest_point(ball, point)
+                actions[0] = Actions.GoToPointIgnore(point2, (ball - b0).arg())
             elif aux.is_point_inside_poly(ball, hullA):
                 if b2.x > 0:
                     actions[0] = Actions.Kick(b2)
@@ -403,20 +410,19 @@ git rebase upstream/master
 
             fup = field.enemy_goal.frw_up
             fdown = field.enemy_goal.frw_down
-        actions[0] = Actions.GoToPoint(aux.Point(0, 0), 0)
 
             
 
-def Find_closest_bot_line(bots: list[rbt.Robot], p1: aux.Point, p2: aux.Point, type_: str):
-    min_ = 9999999999
-    bot_: rbt.Robot = None
+def Find_closest_bot_line(bots: list[rbt.Robot], p1: aux.Point, p2: aux.Point, type_: str) -> tuple[rbt.Robot, float]:
+    min_: float = 9999999999
+    bot_: Optional[rbt.Robot] = None
     p = aux.Point(0, 0)
     for bot in bots:
         p = aux.closest_point_on_line(p1, p2, bot.get_pos(), type_)
         if (p - bot.get_pos()).mag() < min_:
             min_ = (p - bot.get_pos()).mag()
             bot_ = bot
-    return bot_, min_
+    return bot_, min_ # type:ignore
 
 
 # min_ = 9999999999
