@@ -187,7 +187,7 @@ git rebase upstream/master
             enemies = field.active_enemies(True)
 
             idb0 = 0
-            b0 = field.enemies[idb0].get_pos()
+            b0 = field.allies[idb0].get_pos()
             rb0 = field.enemies[idb0]
 
             idb1 = 1
@@ -207,30 +207,38 @@ git rebase upstream/master
 
 
             ball = field.ball.get_pos()
+            ball_obj = field.ball
             #field.strategy_image.draw_circle(ball, (0, 255, 255), 50)
             
 
-            center = field.enemy_goal.center
+            centerEnemy = field.enemy_goal.center
+            centerAlly = field.ally_goal.center
             frw = field.enemy_goal.frw
 
-            a_up = field.ally_goal.frw_up
-            a_down = field.ally_goal.frw_down
-            ac_up = field.ally_goal.center_up
-            ac_down = field.ally_goal.center_down
+            frw_upA = field.ally_goal.frw_up
+            frw_downA = field.ally_goal.frw_down
+            center_upA = field.ally_goal.center_up
+            center_downA = field.ally_goal.center_down
 
-            e_up = field.enemy_goal.frw_up
-            e_down = field.enemy_goal.frw_down
-            ec_up = field.enemy_goal.center_up
-            ec_down = field.enemy_goal.center_down
+            center_upE = field.enemy_goal.frw_up
+            center_downE = field.enemy_goal.frw_down
+            center_upE = field.enemy_goal.center_up
+            center_downE = field.enemy_goal.center_down
 
-            hull1 = field.ally_goal.hull
-            hull2 = field.enemy_goal.hull
+            hullA = field.ally_goal.hull
+            hullE = field.enemy_goal.hull
 
-            up = field.enemy_goal.up
-            down = field.enemy_goal.down
+            upE = field.enemy_goal.up
+            downE = field.enemy_goal.down
 
-            fup = field.enemy_goal.frw_up
-            fdown = field.enemy_goal.frw_down
+            upA = field.ally_goal.up
+            downA = field.ally_goal.down
+
+            fupE = field.enemy_goal.frw_up
+            fdownE = field.enemy_goal.frw_down
+
+            fupA = field.ally_goal.frw_up
+            fdownA = field.ally_goal.frw_down
 
             #bot 1 closer
             bot_ , min_ = Find_closest_bot_line(enemies, b1, b2, "S")
@@ -246,32 +254,31 @@ git rebase upstream/master
             else:
                 rad = (bEnemy - ball).mag() - 50
 
-            field.strategy_image.telemetry.append(["bEnemy- b1", f'{(bEnemy - b1).mag()}'])
+            # field.strategy_image.telemetry.append(["bEnemy- b1", f'{(bEnemy - b1).mag()}'])
 
             
-            point = aux.nearest_point_on_circle(ball, bEnemy, rad)
-            if rad < 400 and min_ > 200:
-                actions[1] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
-            elif rad < 400 and min_ < 200:
-                if aux.get_angle_between_points(bot_.get_pos(), b2, b1) > 0:
-                    b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() + 3.14 / 5)
-                else:
-                    b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() - 3.14 / 5)
-                actions[2] = Actions.GoToPoint(aux.nearest_point_on_circle(b2, bEnemy, rad), (ball - b2).arg())
-            else:
-                actions[1] = Actions.GoToPoint(point, (ball - b1).arg())
+            # point = aux.nearest_point_on_circle(ball, bEnemy, rad)
+            # if rad < 400 and min_ > 200:
+            #     actions[1] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
+            # elif rad < 400 and min_ < 200:
+            #     if aux.get_angle_between_points(bot_.get_pos(), b2, b1) > 0:
+            #         b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() + 3.14 / 5)
+            #     else:
+            #         b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() - 3.14 / 5)
+            #     actions[2] = Actions.GoToPoint(aux.nearest_point_on_circle(b2, bEnemy, rad), (ball - b2).arg())
+            # else:
+            #     actions[1] = Actions.GoToPoint(point, (ball - b1).arg())
 
 
             #bot 2 attacker
-
             pointDown = field.enemy_goal.eye_up
             old_b2 = b2
             pointUp = -field.enemy_goal.eye_up
             yesUp = 0
             yesDown= 0
             for bot in enemies:
-                p1 = aux.closest_point_on_line(b2, up, bot.get_pos(), "S")
-                p2 = aux.closest_point_on_line(b2, down, bot.get_pos(), "S")
+                p1 = aux.closest_point_on_line(b2, upE, bot.get_pos(), "S")
+                p2 = aux.closest_point_on_line(b2, downE, bot.get_pos(), "S")
                 if (p1 - bot.get_pos()).mag() < 200:
                     yesUp = 1
                 elif (p2 - bot.get_pos()).mag() < 200:
@@ -281,13 +288,16 @@ git rebase upstream/master
                 actions[2] = Actions.BallGrab((ball - b2).arg())
             elif (ball - b2).mag() < 150:
                 if not yesUp:
-                    self.time += 1
-                    actions[2] = Actions.GoToPoint(ball + aux.rotate(aux.Point(50, 0), ))
-                    if(self.time >= 20):
-                        actions[2] =Actions.Kick(up + pointUp)
+                    # if (ball - b2).mag() < 250:
+                    #     self.time += 1
+                    # actions[2] = Actions.GoToPoint(ball + aux.rotate(aux.Point(150, 0), (ball - upE).arg()), (ball - b2).arg())
+                    # field.strategy_image.draw_circle(b2, [0, 0, 0], 50)
+                    # if(self.time >= 150):
+                    actions[2] =Actions.Kick(upE + pointUp)
+                        # self.time = 0
                 elif not yesDown:
                     self.time += 1
-                    actions[2] =Actions.Kick(down + pointDown)
+                    actions[2] =Actions.Kick(downE + pointDown)
                 else:
                     actions[2] =Actions.Kick(b1, const.VOLTAGE_SHOOT ,True)
             elif rad < 400:
@@ -308,6 +318,18 @@ git rebase upstream/master
 
             #bot 0 gk
             
+            point = aux.line_circle_intersect(ball, ball_obj.get_vel(), centerAlly, (upA - centerAlly + (center_upA - upA) / 2).mag(), "R")
+            if len(point) == 2:
+                point = aux.find_nearest_point(ball, point)
+                actions[0] = Actions.GoToPointIgnore(point, (ball - b0).arg())
+            elif aux.is_point_inside_poly(ball, hullA):
+                if b2.x > 0:
+                    actions[0] = Actions.Kick(b2)
+                else:
+                    actions[0] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
+            else:
+                actions[0] = Actions.GoToPointIgnore(centerAlly, (ball - b0).arg())
+
 
             # yesUp = 0
             # yesDown= 0
@@ -381,6 +403,7 @@ git rebase upstream/master
 
             fup = field.enemy_goal.frw_up
             fdown = field.enemy_goal.frw_down
+        actions[0] = Actions.GoToPoint(aux.Point(0, 0), 0)
 
             
 
