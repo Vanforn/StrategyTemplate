@@ -240,7 +240,7 @@ git rebase upstream/master
             fupA = field.ally_goal.frw_up
             fdownA = field.ally_goal.frw_down
 
-            #bot 1 closer
+            # bot 1 closer
             bot_ , min_ = Find_closest_bot_line(enemies, b1, b2, "S")
             enemyClose = 0
             if const.ENEMY_GK == 0:
@@ -254,21 +254,19 @@ git rebase upstream/master
                 rad = 400
             else:
                 rad = (bEnemy - ball).mag() - 50
-
-            # field.strategy_image.telemetry.append(["bEnemy- b1", f'{(bEnemy - b1).mag()}'])
-
             
-            # point = aux.nearest_point_on_circle(ball, bEnemy, rad)
-            # if rad < 400 and min_ > 200:
-            #     actions[1] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
-            # elif rad < 400 and min_ < 200:
-            #     if aux.get_angle_between_points(bot_.get_pos(), b2, b1) > 0:
-            #         b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() + 3.14 / 5)
-            #     else:
-            #         b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() - 3.14 / 5)
-            #     actions[2] = Actions.GoToPoint(aux.nearest_point_on_circle(b2, bEnemy, rad), (ball - b2).arg())
-            # else:
-            #     actions[1] = Actions.GoToPoint(point, (ball - b1).arg())
+            point = aux.nearest_point_on_circle(ball, bEnemy, rad)
+            if rad < 400 and min_ > 200:
+                actions[1] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
+            elif rad < 400 and min_ < 200:
+                if aux.get_angle_between_points(bot_.get_pos(), b2, b1) > 0:
+                    b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() + 3.14 / 5)
+                else:
+                    b2 = b2 + aux.rotate(aux.Point(200,0), rb2.get_angle() - 3.14 / 5)
+                actions[2] = Actions.GoToPoint(aux.nearest_point_on_circle(b2, bEnemy, rad), (ball - b2).arg())
+            else:
+                actions[1] = Actions.GoToPoint(point, (ball - b1).arg())
+            #/////////////////////////////////////////////
 
 
             #bot 2 attacker
@@ -318,6 +316,7 @@ git rebase upstream/master
                 field.strategy_image.draw_circle(aux.nearest_point_on_circle(b2, b1, 1000), (0, 0, 0), 50)
                 field.strategy_image.draw_line(old_b2, b1)
                 actions[2] = Actions.GoToPoint(aux.nearest_point_on_circle(b2, b1, 1000), (ball - b2).arg())
+            #///////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -325,17 +324,17 @@ git rebase upstream/master
 
             #bot 0 gk
             
-            point = aux.line_circle_intersect(ball, ball_obj.get_vel(), centerAlly, (upA - centerAlly + (center_upA - upA) / 2).mag(), "R")
-            if len(point) == 2:
-                point2 = aux.find_nearest_point(ball, point)
-                actions[0] = Actions.GoToPointIgnore(point2, (ball - b0).arg())
-            elif aux.is_point_inside_poly(ball, hullA):
-                if b2.x > 0:
-                    actions[0] = Actions.Kick(b2)
-                else:
-                    actions[0] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
-            else:
-                actions[0] = Actions.GoToPointIgnore(centerAlly, (ball - b0).arg())
+            # point = aux.line_circle_intersect(ball, ball_obj.get_vel(), centerAlly, (upA - centerAlly + (center_upA - upA) / 2).mag(), "R")
+            # if len(point) == 2:
+            #     point2 = aux.find_nearest_point(ball, point)
+            #     actions[0] = Actions.GoToPointIgnore(point2, (ball - b0).arg())
+            # elif aux.is_point_inside_poly(ball, hullA):
+            #     if b2.x > 0:
+            #         actions[0] = Actions.Kick(b2)
+            #     else:
+            #         actions[0] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
+            # else:
+            #     actions[0] = Actions.GoToPointIgnore(centerAlly, (ball - b0).arg())
 
 
             # yesUp = 0

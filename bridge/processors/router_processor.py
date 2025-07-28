@@ -59,8 +59,8 @@ class CommandSink(BaseProcessor):
 
         context = zmq.Context()
         self.s_control = context.socket(zmq.PUB)
-        #self.s_control.connect("tcp://192.168.165.253:5051")
-        self.s_control.connect("tcp://127.0.0.1:5051")
+        self.s_control.connect("tcp://192.168.165.253:5051")
+        #self.s_control.connect("tcp://127.0.0.1:5051")
 
     def process(self) -> None:
         """
