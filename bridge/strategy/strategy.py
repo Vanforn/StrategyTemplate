@@ -93,6 +93,7 @@ git rebase upstream/master
         - actions[9] = Actions.BallGrab(0.0)
                 The robot number 9 grabs the ball at an angle of 0.0 (it looks to the right, along the OX axis)
         """
+        
         # idx = 0
         # ally_pos = field.allies(idx)
         #get_line_intersection
@@ -185,6 +186,14 @@ git rebase upstream/master
         if field.ally_color == const.Color.BLUE:
             
             enemies = field.active_enemies(True)
+            ally = field.active_allies(True)
+            all_robots = enemies + ally
+            if len(ally) != 0:
+                rbM: rbt.Robot
+                rbK: rbt.Robot
+                rbM, rbK = GetMyRobot(2, field)
+                bM = rbM.get_pos()
+                bK = rbK.get_pos()
 
             idb0 = 0
             b0 = field.allies[idb0].get_pos()
@@ -249,6 +258,7 @@ git rebase upstream/master
             bEnemy = field.enemies[enemyClose].get_pos()
             rbEnemy = field.enemies[enemyClose]
 
+
             rad: float
             if (bEnemy - ball).mag() > 400:
                 rad = 400
@@ -270,10 +280,29 @@ git rebase upstream/master
 
 
             #bot 2 attacker
-            enemy_bot, radius = Find_closest_bot_line(enemies, ball, b2, "S")
-            if enemy_bot is not None:
-                field.strategy_image.draw_line(enemy_bot.get_pos(), b2)
-                Close_pass(enemy_bot, enemy_bot.get_pos(), rb2, b2, radius, ball, field, actions)
+            if len(enemies) != 0:
+                nearest_robot = fld.find_nearest_robot(ball, all_robots)
+                point_to_goal_up = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
+                point_to_goal_down = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
+                point_to_goal = aux.find_nearest_point(bM, [point_to_goal_down, point_to_goal_up])
+
+                if nearest_robot.color == const.Color.BLUE:
+                    not_my_point_to_goal = aux.find_nearest_point(bK, [point_to_goal_down, point_to_goal_up])
+                    points = [point_to_goal_down, point_to_goal_up]
+                    points.remove(not_my_point_to_goal)
+                    my_point_to_goal = points[0]
+                    field.strategy_image.draw_line(bM, my_point_to_goal, (0, 255, 255), 20)
+                    actions[rbM.r_id] = Actions.GoToPoint(my_point_to_goal, (my_point_to_goal - bM).arg())
+                else:
+                    if field.is_ball_in(nearest_robot):
+                        Close_pass(nearest_robot, rbM, ball, field, actions)
+                    else:
+                        
+
+
+                # nearest_robotE = fld.find_nearest_robot(ball, enemies)
+                # Close_pass(nearest_robotE, rbM, ball, field, actions)
+
             # pointDown = field.enemy_goal.eye_up
             # old_b2 = b2
             # pointUp = -field.enemy_goal.eye_up
@@ -431,15 +460,44 @@ def Find_closest_bot_line(bots: list[rbt.Robot], p1: aux.Point, p2: aux.Point, t
             bot_ = bot
     return bot_, min_ # type:ignore
 
-def Close_pass(bot1: rbt.Robot, botPos1: aux.Point, bot2: rbt.Robot, botPos2: aux.Point, minR: float, target: aux.Point,field: fld.Field, actions: list[Optional[Action]]) -> None:
+def Close_pass(bot1: rbt.Robot, bot2: rbt.Robot, target: aux.Point,field: fld.Field, actions: list[Optional[Action]]) -> None:
+    """
+    Блокирует пас ближайшеиу роботу от робота цели.
+
+    аргументы:
+        bot1 = робот которого надо блокировать.
+        bot2 = робот для блокировки.
+        minR = 
+        target = на какую точку смотреть.
+        field =  field.
+        acnions = actions.
+    """
+    botPos1 = bot1.get_pos()
+    botPos2 = bot2.get_pos()
     enemies = field.enemies.copy()
+    print(bot1.r_id)
     enemies.remove(bot1)
-    botClose = aux.find_nearest_point(botPos2, [enemies[0].get_pos(), enemies[1].get_pos()])
+    botClose = aux.find_nearest_point(field.ball.get_pos(),[enemies[0].get_pos(), enemies[1].get_pos()])#[enemies[0].get_pos(), enemies[1].get_pos()]
+    field.strategy_image.draw_circle(botClose, (255, 0, 255), 50)
     vec = aux.Point(150, 0)
     vec_first = aux.rotate(vec, (botPos1 - botPos2).arg())
-    field.strategy_image.draw_circle(vec_first, [0, 255 ,255], 50)
+    field.strategy_image.draw_circle(vec_first, (0, 255 ,255), 50)
     vec_second = aux.rotate(vec, (botClose - botPos2).arg())
-    field.strategy_image.draw_circle(vec_second, [255, 255 ,0], 50)
+    field.strategy_image.draw_circle(vec_second, (255, 255 ,0), 50)
     point_to_go = aux.closest_point_on_line(botPos1 + vec_first, botClose + vec_second, botPos2, "S")
-    field.strategy_image.draw_circle(point_to_go, [0, 0 ,0], 50)
-    actions[bot2.r_id] = Actions.GoToPoint(point_to_go, (target - botPos2).arg())
+    field.strategy_image.draw_circle(point_to_go, (0, 0 ,0), 50)
+    actions[bot2.r_id] = Actions.GoToPoint(point_to_go, (target - botPos2).arg(), ignore_ball=True)
+    field.strategy_image.draw_line(botClose, botPos2)
+
+
+def GetMyRobot(my_id: int, field: fld.Field) -> tuple[rbt.Robot, rbt.Robot]:
+    """
+    Возвращает моего и Костиного робота
+
+    my_id = id моего робота
+    """
+    bots = field.active_allies(True)
+    bots_id = [bots[0].r_id, bots[1].r_id, bots[2].r_id]
+    bots_id.remove(my_id)
+    not_my_id = bots_id[0]
+    return field.allies[my_id], field.allies[not_my_id]
