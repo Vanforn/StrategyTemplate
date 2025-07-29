@@ -5,6 +5,7 @@
 from enum import Enum
 
 
+
 class State(Enum):
     """Класс с состояниями игры"""
 

@@ -37,23 +37,23 @@ class Strategy:
             text = str(field.game_state) + "  we_active:" + str(self.we_active)
             field.strategy_image.print(aux.Point(600, 780), text, need_to_scale=False)
         match field.game_state:
-            case GameStates.RUN:
+            case GameStates.RUN: #OK
                 self.run(field, actions)
-            case GameStates.TIMEOUT:
-                pass
-            case GameStates.HALT:
+            case GameStates.TIMEOUT: #READY
+                self.TIMEOUT(field, actions)
+            case GameStates.HALT: #READY
                 return [None] * const.TEAM_ROBOTS_MAX_COUNT
-            case GameStates.PREPARE_PENALTY:
-                pass
-            case GameStates.PENALTY:
-                pass
-            case GameStates.PREPARE_KICKOFF:
-                pass
-            case GameStates.KICKOFF:
-                pass
-            case GameStates.FREE_KICK:
-                pass
-            case GameStates.STOP:
+            case GameStates.PREPARE_PENALTY: #READY
+                self.PREPARE_PENALTY(field, actions)
+            case GameStates.PENALTY:#READY
+                self.PENALTY(field, actions)
+            case GameStates.PREPARE_KICKOFF:#READY
+                self.PREPARE_KICKOFF(field, actions)
+            case GameStates.KICKOFF:#READY
+                self.KICKOFF(field, actions)
+            case GameStates.FREE_KICK: #READY
+                self.run(field, actions)
+            case GameStates.STOP: #READY
                 # The router will automatically prevent robots from getting too close to the ball
                 self.run(field, actions)
 
@@ -64,8 +64,115 @@ class Strategy:
     #     ball = field.ball.get_pos()
     #     vec = ball - rb
     #     if vec.mag() > 120:
+    def TIMEOUT(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
+        if len(field.active_allies(False)) == 3:
+            one, two, three = GetIds(field.active_allies(False),field, actions)
+            if field.ally_goal.center_up.y > field.ally_goal.center_down.y:
+                actions[one] = Actions.GoToPoint(field.ally_goal.center_up + aux.Point(0, 100), 0)
+                actions[two] = Actions.GoToPoint(field.ally_goal.center_up + aux.Point(0, 250), 0)
+                actions[three] = Actions.GoToPoint(field.ally_goal.center_up + aux.Point(0, 400), 0)
+            else:
+                actions[one] = Actions.GoToPoint(field.ally_goal.center_down + aux.Point(0, 100), 0)
+                actions[two] = Actions.GoToPoint(field.ally_goal.center_down + aux.Point(0, 400), 0)
+                actions[three] = Actions.GoToPoint(field.ally_goal.center_down + aux.Point(0, 700), 0)
 
 
+    def PREPARE_PENALTY(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
+        gkId, faId, saId = GetIds(field.active_allies(True),field, actions)
+        gk_pos = field.allies[gkId].get_pos()
+        gk = field.enemies[gkId]
+
+        atacker_first_pos = field.allies[faId].get_pos()
+        atacker_first = field.allies[faId]
+
+        atacker_second_pos = field.allies[saId].get_pos()
+        atacker_second = field.allies[saId]
+
+        point_first = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
+        point_second = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
+        if self.we_active:
+            actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
+            actions[faId] = Actions.GoToPoint(field.ally_goal.frw + aux.Point(150, 0), 0)
+            actions[saId] = Actions.GoToPoint(aux.Point(200 * -const.POLARITY), (field.ball.get_pos() - atacker_second_pos).arg())
+        else:
+            #code for GK, its for time:
+            actions[gkId] = Actions.GoToPoint(field.ally_goal.center, 0)
+            #////
+            actions[faId] = Actions.GoToPoint(point_first, 0)
+            actions[saId] = Actions.GoToPoint(point_second, 0)
+
+    def PENALTY(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
+        ball = field.ball.get_pos()
+
+        gkId, faId, saId = GetIds(field.active_allies(True),field, actions)
+        gk_pos = field.allies[gkId].get_pos()
+        gk = field.enemies[gkId]
+
+        atacker_first_pos = field.allies[faId].get_pos()
+        atacker_first = field.allies[faId]
+
+        atacker_second_pos = field.allies[saId].get_pos()
+        atacker_second = field.allies[saId]
+
+        point_first = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
+        point_second = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
+        if self.we_active:
+            actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
+            actions[faId] = Actions.GoToPoint(field.ally_goal.frw_down, 0)
+            point_for_score: Optional[aux.Point] = findPointForScore(field, ball)
+            if point_for_score is not None:
+                actions[saId] = Actions.Kick(point_for_score)
+
+        else:
+            #code for GK, its for time:
+            actions[gkId] = Actions.GoToPoint(field.ally_goal.center, 0)
+            #////
+            actions[faId] = Actions.GoToPoint(point_first, 0)
+            actions[saId] = Actions.GoToPoint(point_second, 0)
+    
+    def PREPARE_KICKOFF(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
+        if len(field.active_allies(False)) == 3:
+            gkId, faId, saId = GetIds(field.active_allies(True),field, actions)
+            actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
+            if self.we_active:
+                actions[faId] = Actions.GoToPoint(aux.Point(600 * -const.POLARITY), 0)
+                actions[saId] = Actions.GoToPoint(aux.Point(200 * -const.POLARITY), (field.ball.get_pos() - field.allies[saId].get_pos()).arg())
+            else:
+                y = 130
+                x = math.sqrt(600 * 600 - y * y) * -const.POLARITY
+                actions[faId] = Actions.GoToPoint(aux.Point(x, y), (field.ball.get_pos() - field.allies[faId].get_pos()).arg())
+                actions[saId] = Actions.GoToPoint(aux.Point(x, -y), (field.ball.get_pos() - field.allies[saId].get_pos()).arg()) 
+
+                # points_first = aux.get_tangent_points(field.allies[faId].get_pos(), field.allies[gkId].get_pos() + aux.Point(0, 100), 100.0)
+                # if points_first[0].y < points_first[1].y:
+                #     point_first = points_first[0]
+                # else:
+                #     point_first = points_first[1]
+
+                # points_first = aux.get_tangent_points(field.allies[saId].get_pos(), field.allies[gkId].get_pos() + aux.Point(0, -100), 100.0)
+                # if points_first[0].y < points_first[1].y:
+                #     point_second = points_first[1]
+                # else:
+                #     point_second = points_first[0]
+                
+                # field.strategy_image.draw_line(field.ball.get_pos(), field.allies[gkId].get_pos() + aux.Point(0, -100) - (field.ball.get_pos() - field.allies[gkId].get_pos() + aux.Point(0, -100)) * 100)
+                # field.strategy_image.draw_line(field.ball.get_pos(), field.allies[gkId].get_pos() + aux.Point(0, 100) - (field.ball.get_pos() - field.allies[gkId].get_pos() + aux.Point(0, 100)) * 100)
+                # field.strategy_image.draw_line(field.ball.get_pos(), point_first + (field.allies[faId].get_pos() - field.ball.get_pos() + aux.Point(0, -100)) * 100, (0, 0, 0))
+                # field.strategy_image.draw_line(field.ball.get_pos(), point_second + (field.allies[saId].get_pos() - field.ball.get_pos() + aux.Point(0, 100)) * 100, (0, 0, 0))
+    def KICKOFF(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
+        if len(field.active_allies(False)) == 3:
+            gkId, faId, saId = GetIds(field.active_allies(True),field, actions)
+            if self.we_active:
+                point_to_kick = findPointForScore(field, field.allies[saId].get_pos())
+                if point_to_kick is not None:
+                    actions[saId] = Actions.Kick(point_to_kick)
+                else: 
+                    actions[saId] = Actions.Kick(field.allies[faId].get_pos(), is_pass= True)
+            else:
+                y = 130
+                x = math.sqrt(600 * 600 - y * y) * -const.POLARITY
+                actions[faId] = Actions.GoToPoint(aux.Point(x, y), (field.ball.get_pos() - field.allies[faId].get_pos()).arg())
+                actions[saId] = Actions.GoToPoint(aux.Point(x, -y), (field.ball.get_pos() - field.allies[saId].get_pos()).arg()) 
 
 
 
@@ -300,7 +407,11 @@ git rebase upstream/master
                     else:
                         actions[rbM.r_id] =Actions.BallGrab((ball - bM).arg())
                         if field.is_ball_in(rbM):
-                            actions[rbM.r_id] = Actions.Kick(bK, is_pass= True)
+                            point_to_kick = findPointForScore(field, field.allies[rbM.r_id].get_pos())
+                            if point_to_kick is not None:
+                                actions[rbM.r_id] = Actions.Kick(point_to_kick)
+                            else: 
+                                actions[rbM.r_id] = Actions.Kick(field.allies[rbK.r_id].get_pos(), is_pass= True)
 
                 else:
                     if field.is_ball_in(nearest_robot):
@@ -373,21 +484,21 @@ git rebase upstream/master
 
             #bot 0 gk
             
-            point_gk1 = aux.line_circle_intersect(ball, ball_obj.get_vel(), centerAlly, (upA - centerAlly + (center_upA - upA) / 2).mag(), "R")
-            if len(point_gk1) == 2:
-                point_gk2 = aux.closest_point_on_line(center_downA, center_upA, ball, "S")
-                actions[0] = Actions.GoToPointIgnore(point_gk2, (ball - b0).arg())
-            elif aux.is_point_inside_poly(ball, hullA):
-                if b2.x > 0:
-                    actions[0] = Actions.Kick(b2)
-                    if b0.x < center_upA.x:
-                        b0.x = center_upA.x
-                else:
-                    actions[0] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
-                    if b0.x < center_upA.x:
-                        b0.x = center_upA.x
-            else:
-                actions[0] = Actions.GoToPointIgnore(aux.closest_point_on_line(center_downA, center_upA, ball, "S"), (ball - b0).arg())
+            # point_gk1 = aux.line_circle_intersect(ball, ball_obj.get_vel(), centerAlly, (upA - centerAlly + (center_upA - upA) / 2).mag(), "R")
+            # if len(point_gk1) == 2:
+            #     point_gk2 = aux.closest_point_on_line(center_downA, center_upA, ball, "S")
+            #     actions[0] = Actions.GoToPointIgnore(point_gk2, (ball - b0).arg())
+            # elif aux.is_point_inside_poly(ball, hullA):
+            #     if b2.x > 0:
+            #         actions[0] = Actions.Kick(b2)
+            #         if b0.x < center_upA.x:
+            #             b0.x = center_upA.x
+            #     else:
+            #         actions[0] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
+            #         if b0.x < center_upA.x:
+            #             b0.x = center_upA.x
+            # else:
+            #     actions[0] = Actions.GoToPointIgnore(aux.closest_point_on_line(center_downA, center_upA, ball, "S"), (ball - b0).arg())
             #/////////////////////////////////
 
             # yesUp = 0
@@ -512,8 +623,58 @@ def GetMyRobot(my_id: int, field: fld.Field) -> tuple[rbt.Robot, rbt.Robot]:
 
     my_id = id моего робота
     """
-    bots = field.active_allies(True)
+    bots = field.active_allies(False)
     bots_id = [bots[0].r_id, bots[1].r_id, bots[2].r_id]
     bots_id.remove(my_id)
     not_my_id = bots_id[0]
     return field.allies[my_id], field.allies[not_my_id]
+
+
+
+def findPointForScore(field: fld.Field, pointFrom: aux.Point) -> Optional[aux.Point]:#WORK!!!
+    """
+    Find the nearest point to a given point (center) from a list, optionally excluding some points.
+
+    Args:
+        center (Point): The reference point.
+        points (list[Point]): The list of candidate points.
+        exclude (Optional[list[Point]]): Points to ignore during the search (default is None).
+
+    Returns:
+        Point: The closest point to center that is not in exclude.
+    """
+    pointFrom = field.ball.get_pos()
+    qPoint = 8
+    qPoint +=2
+    d = field.enemy_goal.up.y - field.enemy_goal.down.y
+    points = [aux.Point(field.enemy_goal.up.x, field.enemy_goal.up.y-(d/qPoint*i)) for i in range(1, qPoint)]
+    enemys = field.active_enemies(True)
+    closest = None
+    min_dist = 10e10
+    for _, point in enumerate(points):
+        if aux.dist(pointFrom, point) < min_dist:
+            if all(len(aux.line_circle_intersect(pointFrom, point, enemyR.get_pos(), const.ROBOT_R*1.5, "S")) == 0 for enemyR in enemys):
+                """if noone enemy r prevent this kick"""
+                min_dist = aux.dist(pointFrom, point)
+                closest = point
+    if closest != None:
+        field.strategy_image.draw_line(pointFrom, closest, color=(0, 255, 0))
+    # else:
+    #     field.strategy_image.draw_circle(pointFrom, color=(0, 0, 0), size_in_mms=100)
+    return closest
+
+def GetIds(bots: list[rbt.Robot], field: fld.Field, actions: list[Optional[Action]]) -> tuple[int, int, int]:
+    '''
+    Возвращает id роботов
+
+    id:
+        1: вратарь
+        2: первый атак.
+        3: второй атак.
+    '''
+    gk = const.GK
+    for bot in bots:
+        if bot.r_id == gk:
+            bots.remove(bot)
+            break
+    return gk, bots[0].r_id, bots[1].r_id
