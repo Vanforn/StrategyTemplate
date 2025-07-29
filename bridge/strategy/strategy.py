@@ -280,25 +280,39 @@ git rebase upstream/master
 
 
             #bot 2 attacker
-            if len(enemies) != 0:
-                #поиск 2 тотчек для удара
-                nearest_robot = fld.find_nearest_robot(ball, all_robots)
-                point_to_goal_up = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
-                point_to_goal_down = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
-                point_to_goal = aux.find_nearest_point(bM, [point_to_goal_down, point_to_goal_up])
+            if actions[rbM.r_id] == None:
+                if len(enemies) != 0:
+                    #поиск 2 тотчек для удара
+                    nearest_robot = fld.find_nearest_robot(ball, all_robots)
+                    point_to_goal_up = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
+                    point_to_goal_down = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
+                    point_to_goal = aux.find_nearest_point(bM, [point_to_goal_down, point_to_goal_up])
 
-                #если ближайший робот союзник, то едет к точке удара, к которой не едет другой атакующий
-                if nearest_robot.color == const.COLOR:
-                    not_my_point_to_goal = aux.find_nearest_point(bK, [point_to_goal_down, point_to_goal_up])
-                    points = [point_to_goal_down, point_to_goal_up]
-                    points.remove(not_my_point_to_goal)
-                    my_point_to_goal = points[0]
-                    field.strategy_image.draw_line(bM, my_point_to_goal, (0, 255, 255), 20)
-                    actions[rbM.r_id] = Actions.GoToPoint(my_point_to_goal, (my_point_to_goal - bM).arg())
-                else:
-                    if field.is_ball_in(nearest_robot):
-                        Close_pass(nearest_robot, rbM, ball, field, actions)
+                    #если ближайший робот союзник, то едет к точке удара, к которой не едет другой атакующий
+                    if nearest_robot.color == const.COLOR:
+                        not_my_point_to_goal = aux.find_nearest_point(bK, [point_to_goal_down, point_to_goal_up])
+                        points = [point_to_goal_down, point_to_goal_up]
+                        points.remove(not_my_point_to_goal)
+                        my_point_to_goal = points[0]
+                        field.strategy_image.draw_line(bM, my_point_to_goal, (0, 255, 255), 20)
+                        if bK == aux.find_nearest_point(ball, [bM, bK]):
+                            actions[rbM.r_id] = Actions.GoToPoint(my_point_to_goal, (my_point_to_goal - bM).arg())
+                        else:
+                            actions[rbM.r_id] =Actions.BallGrab((ball - bM).arg())
+                            if field.is_ball_in(rbM):
+                                actions[rbM.r_id] = Actions.Kick(bK, is_pass= True)
+
                     else:
+                        if field.is_ball_in(nearest_robot):
+                            Close_pass(nearest_robot, rbM, ball, field, actions)
+                        else:
+                            if bM == aux.find_nearest_point(ball, [bM, bK]):
+                                point_to_grab = aux.find_nearest_point(bM, [ball + aux.rotate(aux.Point(110, 0), (ball - nearest_robot.get_pos()).arg() - 45 / 180 * 3.14), ball + aux.rotate(aux.Point(110, 0), (ball - nearest_robot.get_pos()).arg() + 45 / 180 * 3.14)])
+                                actions[rbM.r_id] = Actions.GoToPoint(point_to_grab, (ball - bM).arg(), ignore_ball= True)
+                                if (ball - bM).mag() <= 120:
+                                    actions[rbM.r_id] = Actions.BallGrab((ball - bM).arg())
+                                    if field.is_ball_in(rbM):
+                                        actions[rbM.r_id] = Actions.Kick(bK, is_pass= True)
 
 
 
