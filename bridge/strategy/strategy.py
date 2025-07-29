@@ -281,12 +281,14 @@ git rebase upstream/master
 
             #bot 2 attacker
             if len(enemies) != 0:
+                #поиск 2 тотчек для удара
                 nearest_robot = fld.find_nearest_robot(ball, all_robots)
                 point_to_goal_up = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
                 point_to_goal_down = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
                 point_to_goal = aux.find_nearest_point(bM, [point_to_goal_down, point_to_goal_up])
 
-                if nearest_robot.color == const.Color.BLUE:
+                #если ближайший робот союзник, то едет к точке удара, к которой не едет другой атакующий
+                if nearest_robot.color == const.COLOR:
                     not_my_point_to_goal = aux.find_nearest_point(bK, [point_to_goal_down, point_to_goal_up])
                     points = [point_to_goal_down, point_to_goal_up]
                     points.remove(not_my_point_to_goal)
@@ -297,7 +299,7 @@ git rebase upstream/master
                     if field.is_ball_in(nearest_robot):
                         Close_pass(nearest_robot, rbM, ball, field, actions)
                     else:
-                        
+
 
 
                 # nearest_robotE = fld.find_nearest_robot(ball, enemies)
