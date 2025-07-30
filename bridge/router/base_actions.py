@@ -120,7 +120,9 @@ class Actions:
                     for j in range(len(convex_hull) - 2, 0, -1):
                         next_point = convex_hull[j]
 
-            avoid_ball = domain.game_state in [GameStates.STOP, GameStates.PREPARE_KICKOFF] or not domain.we_active
+            avoid_ball = domain.game_state in [GameStates.STOP, GameStates.PREPARE_KICKOFF] or (
+                domain.game_state in [GameStates.FREE_KICK, GameStates.KICKOFF] and not domain.we_active
+            )
             pth_wp = calc_passthrough_wp(domain, next_point, avoid_ball=avoid_ball, ignore_ball=self.ignore_ball)
             if pth_wp is not None:
                 return [Actions.GoToPointIgnore(pth_wp, angle0)]
@@ -164,12 +166,17 @@ class Actions:
             self.target_angle = target_angle
 
         def is_defined(self, domain: ActionDomain) -> bool:
-            return aux.dist(domain.robot.get_pos(), domain.field.ball.get_pos()) < 3000 and (
-                domain.robot.r_id == const.GK
-                or (
-                    not aux.is_point_inside_poly(domain.field.ball.get_pos(), domain.field.enemy_goal.hull)
-                    and not aux.is_point_inside_poly(domain.field.ball.get_pos(), domain.field.ally_goal.hull)
+            return (
+                aux.dist(domain.robot.get_pos(), domain.field.ball.get_pos()) < 3000
+                and (
+                    domain.robot.r_id == domain.field.gk_id
+                    or (
+                        not aux.is_point_inside_poly(domain.field.ball.get_pos(), domain.field.enemy_goal.hull)
+                        and not aux.is_point_inside_poly(domain.field.ball.get_pos(), domain.field.ally_goal.hull)
+                    )
                 )
+                and domain.game_state not in [GameStates.STOP, GameStates.PREPARE_KICKOFF]
+                and (domain.game_state not in [GameStates.FREE_KICK, GameStates.KICKOFF] or domain.we_active)
             )
 
         def behavior(self, domain: ActionDomain, current_action: ActionValues) -> None:
@@ -508,11 +515,15 @@ def calc_passthrough_wp(
     obstacles_dist: list[tuple[Entity, float]] = []
 
     if avoid_ball:
+        if aux.is_point_inside_circle(robot.get_pos(), field.ball.get_pos(), const.KEEP_BALL_DIST - 50):
+            return aux.nearest_point_on_circle(robot.get_pos(), field.ball.get_pos(), const.KEEP_BALL_DIST + 50)
         ball = Entity(
             field.ball.get_pos(),
             field.ball.get_angle(),
             const.KEEP_BALL_DIST - const.ROBOT_R,
         )
+        if aux.is_point_inside_circle(target, field.ball.get_pos(), const.KEEP_BALL_DIST):
+            target = aux.nearest_point_on_circle(target, field.ball.get_pos(), const.KEEP_BALL_DIST)
         obstacles_dist.append((ball, aux.dist(ball.get_pos(), robot.get_pos())))
     elif not ignore_ball:
         ball = field.ball
