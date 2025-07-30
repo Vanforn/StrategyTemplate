@@ -82,57 +82,59 @@ class Strategy:
 
 
     def PREPARE_PENALTY(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
-        gkId, faId, saId = GetIds(field.active_allies(True),field, actions)
-        gk_pos = field.allies[gkId].get_pos()
-        gk = field.enemies[gkId]
+        if len(field.active_allies(False)) == 3:
+            gkId, faId, saId = GetIds(field.active_allies(False),field, actions)
+            gk_pos = field.allies[gkId].get_pos()
+            gk = field.enemies[gkId]
 
-        atacker_first_pos = field.allies[faId].get_pos()
-        atacker_first = field.allies[faId]
+            atacker_first_pos = field.allies[faId].get_pos()
+            atacker_first = field.allies[faId]
 
-        atacker_second_pos = field.allies[saId].get_pos()
-        atacker_second = field.allies[saId]
+            atacker_second_pos = field.allies[saId].get_pos()
+            atacker_second = field.allies[saId]
 
-        point_first = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
-        point_second = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
-        if self.we_active:
-            actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
-            actions[faId] = Actions.GoToPoint(field.ally_goal.frw + aux.Point(150, 0), 0)
-            actions[saId] = Actions.GoToPoint(aux.Point(200 * -const.POLARITY), (field.ball.get_pos() - atacker_second_pos).arg())
-        else:
-            #code for GK, its for time:
-            actions[gkId] = Actions.GoToPoint(field.ally_goal.center, 0)
-            #////
-            actions[faId] = Actions.GoToPoint(point_first, 0)
-            actions[saId] = Actions.GoToPoint(point_second, 0)
+            point_first = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
+            point_second = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
+            if self.we_active:
+                actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
+                actions[faId] = Actions.GoToPoint(field.ally_goal.frw + aux.Point(150, 0), 0)
+                actions[saId] = Actions.GoToPoint(aux.Point(200 * -const.POLARITY), (field.ball.get_pos() - atacker_second_pos).arg())
+            else:
+                #code for GK, its for time:
+                actions[gkId] = Actions.GoToPoint(field.ally_goal.center, 0)
+                #////
+                actions[faId] = Actions.GoToPoint(point_first, 0)
+                actions[saId] = Actions.GoToPoint(point_second, 0)
 
     def PENALTY(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
-        ball = field.ball.get_pos()
+        if len(field.active_allies(False)) == 3:
+            ball = field.ball.get_pos()
 
-        gkId, faId, saId = GetIds(field.active_allies(True),field, actions)
-        gk_pos = field.allies[gkId].get_pos()
-        gk = field.enemies[gkId]
+            gkId, faId, saId = GetIds(field.active_allies(True),field, actions)
+            gk_pos = field.allies[gkId].get_pos()
+            gk = field.enemies[gkId]
 
-        atacker_first_pos = field.allies[faId].get_pos()
-        atacker_first = field.allies[faId]
+            atacker_first_pos = field.allies[faId].get_pos()
+            atacker_first = field.allies[faId]
 
-        atacker_second_pos = field.allies[saId].get_pos()
-        atacker_second = field.allies[saId]
+            atacker_second_pos = field.allies[saId].get_pos()
+            atacker_second = field.allies[saId]
 
-        point_first = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
-        point_second = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
-        if self.we_active:
-            actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
-            actions[faId] = Actions.GoToPoint(field.ally_goal.frw_down, 0)
-            point_for_score: Optional[aux.Point] = find_point_to_goal(field, ball)
-            if point_for_score is not None:
-                actions[saId] = Actions.Kick(point_for_score)
+            point_first = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
+            point_second = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
+            if self.we_active:
+                actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
+                actions[faId] = Actions.GoToPoint(field.ally_goal.frw_down, 0)
+                point_for_score: Optional[aux.Point] = find_point_to_goal(field, ball)
+                if point_for_score is not None:
+                    actions[saId] = Actions.Kick(point_for_score)
 
-        else:
-            #code for GK, its for time:
-            actions[gkId] = Actions.GoToPoint(field.ally_goal.center, 0)
-            #////
-            actions[faId] = Actions.GoToPoint(point_first, 0)
-            actions[saId] = Actions.GoToPoint(point_second, 0)
+            else:
+                #code for GK, its for time:
+                actions[gkId] = Actions.GoToPoint(field.ally_goal.center, 0)
+                #////
+                actions[faId] = Actions.GoToPoint(point_first, 0)
+                actions[saId] = Actions.GoToPoint(point_second, 0)
     
     def PREPARE_KICKOFF(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
         if len(field.active_allies(False)) == 3:
@@ -296,9 +298,9 @@ git rebase upstream/master
         #actions[1] = Actions.Kick(b2, const.VOLTAGE_SHOOT, True)
         if field.ally_color == const.Color.BLUE:
             
-            if self.baLL is None:
-                self.baLL = field.ball.get_pos()
-            print(-(self.baLL - field.ball.get_pos()).x)
+            # if self.baLL is None:
+            #     self.baLL = field.ball.get_pos()
+            # print(-(self.baLL - field.ball.get_pos()).x)
 
             enemies = field.active_enemies(False)
             ally = field.active_allies(False)
@@ -380,7 +382,7 @@ git rebase upstream/master
             else:
                 rad = (bEnemy - ball).mag() - 50
 
-            Attacker_Ivan.run(field= field, actions= actions)
+            self.attacker_Ivan.run(field, actions)
             
             # point = aux.nearest_point_on_circle(ball, bEnemy, rad)
             # if rad < 400 and min_ > 200:

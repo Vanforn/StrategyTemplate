@@ -8,7 +8,7 @@ from bridge.const import State as GameStates
 from bridge.router.base_actions import Action, Actions, KickActions  # type: ignore
 
 class Attacker_Ivan():
-    def __init__(self, ) -> None:
+    def __init__(self, id: int) -> None:
         self.id = id
 
     def run(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
@@ -87,7 +87,7 @@ class Attacker_Ivan():
                         if point_to_kick is not None:
                             actions[self.id] = Actions.Kick(point_to_kick)
                         else: 
-                            actions[self.id] = Actions.Kick(field.allies[rbK.r_self.id].get_pos(), is_pass= True)
+                            actions[self.id] = Actions.Kick(field.allies[rbK.r_id].get_pos(), is_pass= True)
 
             else:
                 if field.is_ball_in(nearest_robot):
