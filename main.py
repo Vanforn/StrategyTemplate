@@ -17,7 +17,7 @@ if __name__ == "__main__":
         FieldCreator(
             debug_mode=True,  # True => ignore commands from referee
             debug_game_state=const.State.PREPARE_KICKOFF,  # for other states (except STOP and HALT) add "debug_active_team" param
-            debug_active_team=const.Color.BLUE,
+            debug_active_team=const.Color.YELLOW,
         ),
         SSLController(
             ally_color=const.COLOR,

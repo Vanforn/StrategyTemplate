@@ -90,6 +90,17 @@ class Strategy:
         if len(field.active_allies(True)) > 0:
             gkId = field.gk_id
             saId, faId = GetIds(field, actions)
+
+            if saId is None and faId is not None:
+                saId = faId
+            elif faId is None and saId is None:
+                saId = gkId
+
+            if faId is None and saId is not None:
+                faId = saId
+            elif faId is None and saId is None:
+                faId = gkId
+
             if gkId is not None:
                 gk_pos = field.allies[gkId].get_pos()
                 gk = field.enemies[gkId]
@@ -122,11 +133,23 @@ class Strategy:
                     actions[faId] = Actions.GoToPoint(point_first, 0)
                 if saId is not None:
                     actions[saId] = Actions.GoToPoint(point_second, 0)
+                actions[gkId] = Actions.GoToPoint(field.ally_goal.center, 0)
 
     def PENALTY(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
         if len(field.active_allies(True)) > 0:
             gkId = field.gk_id
             saId, faId = GetIds(field, actions)
+
+            if saId is None and faId is not None:
+                saId = faId
+            elif faId is None and saId is None:
+                saId = gkId
+
+            if faId is None and saId is not None:
+                faId = saId
+            elif faId is None and saId is None:
+                faId = gkId
+
             if gkId is not None:
                 gk_pos = field.allies[gkId].get_pos()
                 gk = field.enemies[gkId]
@@ -157,6 +180,7 @@ class Strategy:
                     actions[faId] = Actions.GoToPoint(point_first, 0)
                 if saId is not None:
                     actions[saId] = Actions.GoToPoint(point_second, 0)
+                actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
     
     def PREPARE_KICKOFF(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
         if len(field.active_allies(True)) > 0:
@@ -187,6 +211,7 @@ class Strategy:
                 actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
                 if saId is not None:
                     actions[saId] = Actions.GoToPoint(aux.Point(x, -y), (field.ball.get_pos() - field.allies[saId].get_pos()).arg()) 
+                actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
 
                 # points_first = aux.get_tangent_points(field.allies[faId].get_pos(), field.allies[gkId].get_pos() + aux.Point(0, 100), 100.0)
                 # if points_first[0].y < points_first[1].y:
@@ -208,6 +233,7 @@ class Strategy:
         if len(field.active_allies(True)) > 0:
             gkId = field.gk_id
             saId, faId = GetIds(field, actions)
+            
             if saId is None and faId is not None:
                 saId = faId
             elif faId is None and saId is None:
@@ -239,6 +265,7 @@ class Strategy:
                     actions[faId] = Actions.GoToPoint(aux.Point(x, y), (field.ball.get_pos() - field.allies[faId].get_pos()).arg())
                 if saId is not None:
                     actions[saId] = Actions.GoToPoint(aux.Point(x, -y), (field.ball.get_pos() - field.allies[saId].get_pos()).arg()) 
+                actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
 
 
 
