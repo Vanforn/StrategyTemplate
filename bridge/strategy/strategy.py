@@ -591,7 +591,7 @@ def find_point_to_goal(field: fld.Field, pointFrom: aux.Point) -> Optional[aux.P
     #     field.strategy_image.draw_circle(pointFrom, color=(0, 0, 0), size_in_mms=100)
     return closest
 
-def GetIds(field: fld.Field, actions: list[Optional[Action]]) -> tuple[Optional[int], Optional[int]]:
+def GetIds(field: fld.Field, actions: list[Optional[Action]]) -> list[Optional[int]]:
     '''
     Возвращает id роботов
 
