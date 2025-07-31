@@ -2,6 +2,7 @@
 
 # !v DEBUG ONLY
 from bridge.strategy.attacker_Ivan import Attacker_Ivan
+from bridge.strategy import states
 import math  # type: ignore
 from time import time  # type: ignore
 from typing import Optional
@@ -44,17 +45,17 @@ class Strategy:
             case GameStates.RUN: #OK
                 self.run(field, actions)
             case GameStates.TIMEOUT: #READY
-                self.TIMEOUT(field, actions)
+                states.TIMEOUT(field, actions, self.we_active)
             case GameStates.HALT: #READY
                 return [None] * const.TEAM_ROBOTS_MAX_COUNT
             case GameStates.PREPARE_PENALTY: #READY
-                self.PREPARE_PENALTY(field, actions)
+                states.PREPARE_PENALTY(field, actions, self.we_active)
             case GameStates.PENALTY:#READY
-                self.PENALTY(field, actions)
+                states.PENALTY(field, actions, self.we_active)
             case GameStates.PREPARE_KICKOFF:#READY
-                self.PREPARE_KICKOFF(field, actions)
+                states.PREPARE_KICKOFF(field, actions, self.we_active)
             case GameStates.KICKOFF:#READY
-                self.KICKOFF(field, actions)
+                states.KICKOFF(field, actions, self.we_active)
             case GameStates.FREE_KICK: #READY
                 self.run(field, actions)
             case GameStates.STOP: #READY
@@ -68,205 +69,6 @@ class Strategy:
     #     ball = field.ball.get_pos()
     #     vec = ball - rb
     #     if vec.mag() > 120:
-    def TIMEOUT(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
-        if len(field.active_allies(True)) > 0:
-            one = field.gk_id
-            two, three = GetIds(field, actions)
-            if field.ally_goal.center_up.y > field.ally_goal.center_down.y:
-                actions[one] = Actions.GoToPoint(field.ally_goal.center_up + aux.Point(0, 100), 0)
-                if two is not None:
-                    actions[two] = Actions.GoToPoint(field.ally_goal.center_up + aux.Point(0, 250), 0)
-                if three is not None:
-                    actions[three] = Actions.GoToPoint(field.ally_goal.center_up + aux.Point(0, 400), 0)
-            else:
-                actions[one] = Actions.GoToPoint(field.ally_goal.center_down + aux.Point(0, 100), 0)
-                if two is not None:
-                    actions[two] = Actions.GoToPoint(field.ally_goal.center_down + aux.Point(0, 400), 0)
-                if three is not None:
-                    actions[three] = Actions.GoToPoint(field.ally_goal.center_down + aux.Point(0, 700), 0)
-
-
-    def PREPARE_PENALTY(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
-        if len(field.active_allies(True)) > 0:
-            gkId = field.gk_id
-            saId, faId = GetIds(field, actions)
-
-            if saId is None and faId is not None:
-                saId = faId
-            elif faId is None and saId is None:
-                saId = gkId
-
-            if faId is None and saId is not None:
-                faId = saId
-            elif faId is None and saId is None:
-                faId = gkId
-
-            if gkId is not None:
-                gk_pos = field.allies[gkId].get_pos()
-                gk = field.enemies[gkId]
-            if faId is not None:
-                atacker_first_pos = field.allies[faId].get_pos()
-                atacker_first = field.allies[faId]
-
-            if saId is not None:
-                atacker_second_pos = field.allies[saId].get_pos()
-                atacker_second = field.allies[saId]
-
-            point_first = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
-            point_second = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
-            if self.we_active:
-                if gkId is not None:
-                    actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
-                    # pass
-                if faId is not None:
-                    actions[faId] = Actions.GoToPoint(field.ally_goal.frw + aux.Point(150, 0), 0)
-                    # pass
-                if saId is not None:
-                    actions[saId] = Actions.GoToPoint(aux.Point(200 * -const.POLARITY), (field.ball.get_pos() - atacker_second_pos).arg())
-                    # pass
-            else:
-                #code for GK, its for time:
-                if gkId is not None:
-                    actions[gkId] = Actions.GoToPoint(field.ally_goal.center, 0)
-                #////
-                if faId is not None:
-                    actions[faId] = Actions.GoToPoint(point_first, 0)
-                if saId is not None:
-                    actions[saId] = Actions.GoToPoint(point_second, 0)
-                actions[gkId] = Actions.GoToPoint(field.ally_goal.center, 0)
-
-    def PENALTY(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
-        if len(field.active_allies(True)) > 0:
-            gkId = field.gk_id
-            saId, faId = GetIds(field, actions)
-
-            if saId is None and faId is not None:
-                saId = faId
-            elif faId is None and saId is None:
-                saId = gkId
-
-            if faId is None and saId is not None:
-                faId = saId
-            elif faId is None and saId is None:
-                faId = gkId
-
-            if gkId is not None:
-                gk_pos = field.allies[gkId].get_pos()
-                gk = field.enemies[gkId]
-            if faId is not None:
-                atacker_first_pos = field.allies[faId].get_pos()
-                atacker_first = field.allies[faId]
-
-            if saId is not None:
-                atacker_second_pos = field.allies[saId].get_pos()
-                atacker_second = field.allies[saId]
-            ball = field.ball.get_pos()
-
-            point_first = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
-            point_second = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
-            if self.we_active:
-                actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
-                if faId is not None:
-                    actions[faId] = Actions.GoToPoint  (field.ally_goal.frw_down, 0)
-                point_for_score: Optional[aux.Point] = find_point_to_goal(field, ball)
-                if point_for_score is not None and saId is not None:
-                    actions[saId] = Actions.Kick(point_for_score)
-
-            else:
-                #code for GK, its for time:
-                actions[gkId] = Actions.GoToPoint(field.ally_goal.center, 0)
-                #////
-                if faId is not None:
-                    actions[faId] = Actions.GoToPoint(point_first, 0)
-                if saId is not None:
-                    actions[saId] = Actions.GoToPoint(point_second, 0)
-                actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
-    
-    def PREPARE_KICKOFF(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
-        if len(field.active_allies(True)) > 0:
-            gkId = field.gk_id
-            saId, faId = GetIds(field, actions)
-            actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
-            if saId is None and faId is not None:
-                saId = faId
-            elif faId is None and saId is None:
-                saId = gkId
-
-            if faId is None and saId is not None:
-                faId = saId
-            elif faId is None and saId is None:
-                faId = gkId
-            print(faId, saId, gkId)
-            if self.we_active:
-                if faId is not None:
-                    actions[faId] = Actions.GoToPoint(aux.Point(600 * -const.POLARITY), 0)
-                actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
-                if saId is not None:
-                    actions[saId] = Actions.GoToPoint(aux.Point(200 * -const.POLARITY), (field.ball.get_pos() - field.allies[saId].get_pos()).arg())
-            else:
-                y = 130
-                x = math.sqrt(600 * 600 - y * y) * -const.POLARITY
-                if faId is not None:
-                    actions[faId] = Actions.GoToPoint(aux.Point(x, y), (field.ball.get_pos() - field.allies[faId].get_pos()).arg())
-                actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
-                if saId is not None:
-                    actions[saId] = Actions.GoToPoint(aux.Point(x, -y), (field.ball.get_pos() - field.allies[saId].get_pos()).arg()) 
-                actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
-
-                # points_first = aux.get_tangent_points(field.allies[faId].get_pos(), field.allies[gkId].get_pos() + aux.Point(0, 100), 100.0)
-                # if points_first[0].y < points_first[1].y:
-                #     point_first = points_first[0]
-                # else:
-                #     point_first = points_first[1]
-
-                # points_first = aux.get_tangent_points(field.allies[saId].get_pos(), field.allies[gkId].get_pos() + aux.Point(0, -100), 100.0)
-                # if points_first[0].y < points_first[1].y:
-                #     point_second = points_first[1]
-                # else:
-                #     point_second = points_first[0]
-                
-                # field.strategy_image.draw_line(field.ball.get_pos(), field.allies[gkId].get_pos() + aux.Point(0, -100) - (field.ball.get_pos() - field.allies[gkId].get_pos() + aux.Point(0, -100)) * 100)
-                # field.strategy_image.draw_line(field.ball.get_pos(), field.allies[gkId].get_pos() + aux.Point(0, 100) - (field.ball.get_pos() - field.allies[gkId].get_pos() + aux.Point(0, 100)) * 100)
-                # field.strategy_image.draw_line(field.ball.get_pos(), point_first + (field.allies[faId].get_pos() - field.ball.get_pos() + aux.Point(0, -100)) * 100, (0, 0, 0))
-                # field.strategy_image.draw_line(field.ball.get_pos(), point_second + (field.allies[saId].get_pos() - field.ball.get_pos() + aux.Point(0, 100)) * 100, (0, 0, 0))
-    def KICKOFF(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
-        if len(field.active_allies(True)) > 0:
-            gkId = field.gk_id
-            saId, faId = GetIds(field, actions)
-            
-            if saId is None and faId is not None:
-                saId = faId
-            elif faId is None and saId is None:
-                saId = gkId
-
-            if faId is None and saId is not None:
-                faId = saId
-            elif faId is None and saId is None:
-                faId = gkId
-            if self.we_active:
-                if saId is not None:
-                    point_to_kick = find_point_to_goal(field, field.allies[saId].get_pos())
-                if point_to_kick is not None:
-                    if saId is not None:
-                        actions[saId] = Actions.Kick(point_to_kick)
-                else: 
-                    if saId is not None and faId is not None and saId != faId:
-                        actions[saId] = Actions.Kick(field.allies[faId].get_pos(), is_pass= True)
-                    elif saId is not None and faId is not None and saId == faId:
-                        actions[saId] = Actions.Kick(field.allies[gkId].get_pos(), is_pass= True)
-                    elif faId is not None:
-                        actions[faId] = Actions.Kick(field.allies[gkId].get_pos(), is_pass= True)
-                    else:
-                        actions[gkId] = Actions.Kick(field.enemy_goal.frw)
-            else:
-                y = 130
-                x = math.sqrt(600 * 600 - y * y) * -const.POLARITY
-                if faId != saId and faId is not None:
-                    actions[faId] = Actions.GoToPoint(aux.Point(x, y), (field.ball.get_pos() - field.allies[faId].get_pos()).arg())
-                if saId is not None:
-                    actions[saId] = Actions.GoToPoint(aux.Point(x, -y), (field.ball.get_pos() - field.allies[saId].get_pos()).arg()) 
-                actions[gkId] = Actions.GoToPoint(field.ally_goal.frw, 0)
-
 
 
     def run(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
@@ -749,7 +551,7 @@ def GetMyRobot(my_id: int, field: fld.Field) -> tuple[rbt.Robot, rbt.Robot]:
 
     my_id = id моего робота
     """
-    bots = field.active_allies(False)
+    bots = field.active_allies(True)
     bots_id = [bots[0].r_id, bots[1].r_id, bots[2].r_id]
     bots_id.remove(my_id)
     not_my_id = bots_id[0]

@@ -150,7 +150,7 @@ def GetMyRobot(my_id: int, field: fld.Field) -> tuple[rbt.Robot, rbt.Robot]:
 
     my_self.id = self.id моего робота
     """
-    bots = field.active_allies(False)
+    bots = field.active_allies(True)
     bots_id = [bots[0].r_id, bots[1].r_id, bots[2].r_id]
     bots_id.remove(my_id)
     not_my_id = bots_id[0]
