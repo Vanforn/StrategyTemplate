@@ -77,7 +77,8 @@ class Attacker_Ivan():
                             else:
                                 bM = bM + aux.rotate(aux.Point(500,0), rbM.get_angle() - 3.14 / 5)
                         # field.strategy_image.draw_circle(aux.nearest_point_on_circle(b2, b1, 1000), (0, 0, 0), 50)
-                        actions[self.id] = Actions.GoToPoint(aux.nearest_point_on_circle(bM, bK, 1000), (ball - bM).arg())
+
+                        actions[self.id] = Actions.CatchBall(aux.nearest_point_on_circle(bM, bK, 1000), (ball - bM).arg())
                     else:
                         actions[self.id] = Actions.GoToPoint(my_point_to_goal, (my_point_to_goal - bM).arg())
                 else:
@@ -95,7 +96,7 @@ class Attacker_Ivan():
                 else:
                     if bM == aux.find_nearest_point(ball, [bM, bK]):
                         point_to_grab = aux.find_nearest_point(bM, [ball + aux.rotate(aux.Point(110, 0), (ball - nearest_robot.get_pos()).arg() - 45 / 180 * 3.14), ball + aux.rotate(aux.Point(110, 0), (ball - nearest_robot.get_pos()).arg() + 45 / 180 * 3.14)])
-                        actions[self.id] = Actions.GoToPoint(point_to_grab, (ball - bM).arg(), ignore_ball= True)
+                        actions[self.id] = Actions.CatchBall(point_to_grab, (ball - bM).arg())
                         if (ball - bM).mag() <= 120:
                             actions[self.id] = Actions.BallGrab((ball - bM).arg())
                             if field.is_ball_in(rbM):
@@ -109,7 +110,7 @@ class Attacker_Ivan():
             if bM == aux.find_nearest_point(ball, [i.get_pos() for i in field.active_allies()]):
                 actions[self.id] = Actions.Kick(field.enemy_goal.center)
             else:
-                actions[self.id] = Actions.GoToPoint(bM, (ball - bM).arg())
+                actions[self.id] = Actions.CatchBall(bM, (ball - bM).arg())
 def Find_closest_bot_line(bots: list[rbt.Robot], p1: aux.Point, p2: aux.Point, type_: str) -> tuple[rbt.Robot, float]:
     min_: float = 9999999999
     bot_: Optional[rbt.Robot] = None

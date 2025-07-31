@@ -131,7 +131,9 @@ class Actions:
             return [Actions.GoToPointIgnore(self.target_pos, angle0, self.ball_interact)]
         
     class CatchBall(Action):
-        def __init___(self,target_pos: aux.Point, target_angle: float) -> None:
+        def __init__(
+            self, target_pos: aux.Point, target_angle: float,
+        ) -> None:
             self.target_pos = target_pos
             self.target_angle = target_angle
 

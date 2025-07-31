@@ -41,6 +41,7 @@ class Strategy:
         if field.ally_color == const.COLOR:
             text = str(field.game_state) + "  we_active:" + str(self.we_active)
             field.strategy_image.print(aux.Point(600, 780), text, need_to_scale=False)
+            print(text)
         match field.game_state:
             case GameStates.RUN: #OK
                 self.run(field, actions)
@@ -270,8 +271,8 @@ git rebase upstream/master
                 rad = 400
             else:
                 rad = (bEnemy - ball).mag() - 50
-            if len(ally) > 0:
-                self.attacker_Ivan.run(field, actions)
+            # if len(ally) > 0:
+            #     self.attacker_Ivan.run(field, actions)
             
             # point = aux.nearest_point_on_circle(ball, bEnemy, rad)
             # if rad < 400 and min_ > 200:
