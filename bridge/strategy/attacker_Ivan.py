@@ -101,8 +101,15 @@ class Attacker_Ivan():
                             if field.is_ball_in(rbM):
                                 point_to_goal_now = find_point_to_goal(field, bM)
                                 actions[self.id] = Actions.Kick(point_to_goal)
-                            if field.is_ball_in(rbM):
+                            if field.is_ball_in(rbM) and rbK.r_id is not None:
                                 actions[self.id] = Actions.Kick(bK, is_pass= True)
+                            else:
+                                actions[self.id] = Actions.Kick(field.enemy_goal.center)
+        else:
+            if bM == aux.find_nearest_point(ball, [i.get_pos() for i in field.active_allies()]):
+                actions[self.id] = Actions.Kick(field.enemy_goal.center)
+            else:
+                actions[self.id] = Actions.GoToPoint(bM, (ball - bM).arg())
 def Find_closest_bot_line(bots: list[rbt.Robot], p1: aux.Point, p2: aux.Point, type_: str) -> tuple[rbt.Robot, float]:
     min_: float = 9999999999
     bot_: Optional[rbt.Robot] = None
@@ -121,7 +128,6 @@ def Close_pass(bot1: rbt.Robot, bot2: rbt.Robot, target: aux.Point,field: fld.Fi
     аргументы:
         bot1 = робот которого надо блокировать.
         bot2 = робот для блокировки.
-        minR = 
         target = на какую точку смотреть.
         field =  field.
         acnions = actions.
@@ -158,37 +164,37 @@ def GetMyRobot(my_id: int, field: fld.Field) -> tuple[rbt.Robot, rbt.Robot]:
 
 
 
-def find_point_to_goal(field: fld.Field, pointFrom: aux.Point) -> Optional[aux.Point]:
-    """
-    Find the nearest point to a given point (center) from a list, optionally excluding some points.
+# def find_point_to_goal(field: fld.Field, pointFrom: aux.Point) -> Optional[aux.Point]:
+#     """
+#     Find the nearest point to a given point (center) from a list, optionally excluding some points.
 
-    Args:
-        center (Point): The reference point.
-        points (list[Point]): The list of candself.idate points.
-        exclude (Optional[list[Point]]): Points to ignore during the search (default is None).
+#     Args:
+#         center (Point): The reference point.
+#         points (list[Point]): The list of candself.idate points.
+#         exclude (Optional[list[Point]]): Points to ignore during the search (default is None).
 
-    Returns:
-        Point: The closest point to center that is not in exclude.
-    """
-    pointFrom = field.ball.get_pos()
-    qPoint = 8
-    qPoint +=2
-    d = field.enemy_goal.up.y - field.enemy_goal.down.y
-    points = [aux.Point(field.enemy_goal.up.x, field.enemy_goal.up.y-(d/qPoint*i)) for i in range(1, qPoint)]
-    enemys = field.active_enemies(True)
-    closest = None
-    min_dist = 10e10
-    for _, point in enumerate(points):
-        if aux.dist(pointFrom, point) < min_dist:
-            if all(len(aux.line_circle_intersect(pointFrom, point, enemyR.get_pos(), const.ROBOT_R*1.5, "S")) == 0 for enemyR in enemys):
-                """if noone enemy r prevent this kick"""
-                min_dist = aux.dist(pointFrom, point)
-                closest = point
-    if closest != None:
-        field.strategy_image.draw_line(pointFrom, closest, color=(0, 255, 0))
-    # else:
-    #     field.strategy_image.draw_circle(pointFrom, color=(0, 0, 0), size_in_mms=100)
-    return closest
+#     Returns:
+#         Point: The closest point to center that is not in exclude.
+#     """
+#     pointFrom = field.ball.get_pos()
+#     qPoint = 8
+#     qPoint +=2
+#     d = field.enemy_goal.up.y - field.enemy_goal.down.y
+#     points = [aux.Point(field.enemy_goal.up.x, field.enemy_goal.up.y-(d/qPoint*i)) for i in range(1, qPoint)]
+#     enemys = field.active_enemies(True)
+#     closest = None
+#     min_dist = 10e10
+#     for _, point in enumerate(points):
+#         if aux.dist(pointFrom, point) < min_dist:
+#             if all(len(aux.line_circle_intersect(pointFrom, point, enemyR.get_pos(), const.ROBOT_R*1.5, "S")) == 0 for enemyR in enemys):
+#                 """if noone enemy r prevent this kick"""
+#                 min_dist = aux.dist(pointFrom, point)
+#                 closest = point
+#     if closest != None:
+#         field.strategy_image.draw_line(pointFrom, closest, color=(0, 255, 0))
+#     # else:
+#     #     field.strategy_image.draw_circle(pointFrom, color=(0, 0, 0), size_in_mms=100)
+#     return closest
 
 def Get_ids(bots: list[rbt.Robot], field: fld.Field, actions: list[Optional[Action]]) -> tuple[int, int, int]:
     '''
@@ -205,3 +211,52 @@ def Get_ids(bots: list[rbt.Robot], field: fld.Field, actions: list[Optional[Acti
             bots.remove(bot)
             break
     return gk, bots[0].r_id, bots[1].r_id
+
+
+def find_point_to_goal(field: fld.Field, pointFrom: aux.Point) -> Optional[aux.Point]:
+    """
+    Find the nearest point to a given point (center) from a list, optionally excluding some points.
+
+    Args:
+        center (Point): The reference point.
+        points (list[Point]): The list of candself.idate points.
+        exclude (Optional[list[Point]]): Points to ignore during the search (default is None).
+
+    Returns:
+        Point: The closest point to center that is not in exclude.
+    """
+    pointFrom = field.ball.get_pos()
+    qPoint = 15
+    qPoint +=2
+    d = field.enemy_goal.up.y - field.enemy_goal.down.y
+    points = [aux.Point(field.enemy_goal.up.x, field.enemy_goal.up.y-(d/qPoint*i)) for i in range(1, qPoint)]
+    enemys = field.active_enemies(True)
+    closest = None
+    point_to_goal_first_sort = aux.Point(0,0)
+    point_to_goal_second_sort = aux.Point(0,0)
+    min_dist = 10e10
+    for point_first_sort in points:
+        if aux.dist(pointFrom, point_first_sort) < min_dist:
+            if (aux.line_circle_intersect(pointFrom, point_first_sort, enemyR.get_pos(), const.ROBOT_R*1.5, "S") != 0 for enemyR in enemys):
+                """if noone enemy r prevent this kick"""
+                points.remove(point_first_sort)
+
+    for point in points:
+        if min_dist > aux.dist(pointFrom, point):
+            point_to_goal_first_sort = point
+            min_dist = aux.dist(pointFrom, point)
+    field.strategy_image.draw_circle(point_first_sort, (0, 0, 0), 50)
+    min_dist = 10e10
+    for point_second_sort in points:
+        if point_to_goal_first_sort.y - 50 < point_second_sort.y < point_to_goal_first_sort.y + 50:
+            if aux.dist(aux.find_nearest_point(point_second_sort, [i.get_pos() for i in field.all_bots]), point_second_sort) < min_dist:
+                min_dist = aux.dist(point_to_goal_first_sort, point_second_sort)
+                point_to_goal_second_sort = point_second_sort
+    closest = point_to_goal_second_sort
+    if closest is not None:
+        field.strategy_image.draw_circle(closest, (0, 0, 0), 50)
+    if closest != None:
+        field.strategy_image.draw_line(pointFrom, closest, color=(0, 255, 0))
+    # else:
+    #     field.strategy_image.draw_circle(pointFrom, color=(0, 0, 0), size_in_mms=100)
+    return closest

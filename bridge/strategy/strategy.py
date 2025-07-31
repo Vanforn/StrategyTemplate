@@ -194,12 +194,12 @@ git rebase upstream/master
             enemies = field.active_enemies(False)
             ally = field.active_allies(False)
             all_robots = enemies + ally
-            if len(ally) != 0:
-                rbM: rbt.Robot
-                rbK: rbt.Robot
-                rbM, rbK = GetMyRobot(2, field)
-                bM = rbM.get_pos()
-                bK = rbK.get_pos()
+            # if len(ally) != 0:
+            #     rbM: rbt.Robot
+            #     rbK: rbt.Robot
+            #     rbM, rbK = GetMyRobot(2, field)
+            #     bM = rbM.get_pos()
+            #     bK = rbK.get_pos()
 
             idb0 = 0
             b0 = field.allies[idb0].get_pos()
@@ -270,8 +270,8 @@ git rebase upstream/master
                 rad = 400
             else:
                 rad = (bEnemy - ball).mag() - 50
-
-            self.attacker_Ivan.run(field, actions)
+            if len(ally) > 0:
+                self.attacker_Ivan.run(field, actions)
             
             # point = aux.nearest_point_on_circle(ball, bEnemy, rad)
             # if rad < 400 and min_ > 200:
