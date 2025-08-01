@@ -25,7 +25,7 @@ class Strategy:
         self.id = 1
         self.time = 0
         self.baLL = None
-        self.attacker_Ivan = Attacker_Ivan(0)
+        self.attacker_Ivan = Attacker_Ivan(6)
 
         self.state = 1
         self.idGettingPass = None
@@ -48,14 +48,14 @@ class Strategy:
         if field.ally_color == const.COLOR:
             text = str(field.game_state) + "  we_active:" + str(self.we_active)
             field.strategy_image.print(aux.Point(600, 780), text, need_to_scale=False)
-            #print(text)
+            print(text)
         match field.game_state:
             case GameStates.RUN: #OK
                 self.run(field, actions)
             case GameStates.TIMEOUT: #READY
                 states.TIMEOUT(field, actions, self.we_active)
             case GameStates.HALT: #READY
-                return [None] * const.TEAM_ROBOTS_MAX_COUNT
+                return [Actions.Stop()] * const.TEAM_ROBOTS_MAX_COUNT
             case GameStates.PREPARE_PENALTY: #READY
                 states.PREPARE_PENALTY(field, actions, self.we_active)
             case GameStates.PENALTY:#READY
@@ -135,10 +135,6 @@ git rebase upstream/master
         
         #actions[0] = Actions.GoToPointIgnore(ball, alf)
         #actions[4] = Actions.GoToPointIgnore(ball + vec, alf)
-
-        self.count += 10
-        if self.count >= 360:
-            self.count = 0
 
 
         # match self.id:
@@ -280,9 +276,8 @@ git rebase upstream/master
                 rad = (bEnemy - ball).mag() - 50
             # if len(ally) > 0:
             #     self.attacker_Ivan.run(field, actions)
-
-        idKostyaAttacker = 2
-        idIvanAttacker = 0
+        idKostyaAttacker = 5
+        idIvanAttacker = 6
         play = True
         if len(field.active_allies(True)) != 0:
             if field.ally_color == const.Color.BLUE:
@@ -296,10 +291,13 @@ git rebase upstream/master
 
                 #if play:
                     # self.attacker(field, actions, 0, 2)
+                 
                 self.attacker_Ivan.run(field, actions)
-                self.attacker(field, actions, 2, 0)
+                self.attacker(field, actions, idKostyaAttacker, idIvanAttacker)
                 if field.allies[const.GK].is_used():
-                    self.GKLastState = GK(field, actions, self.GKLastState) 
+                    self.GKLastState = GK(field, actions, self.GKLastState)
+            
+                
                 # goToNearestScorePoint(field, actions, 0, 2)
                 # goToNearestScorePoint(field, actions, 2, 0)
                 # print(len(field.active_enemies()), [r.r_id for r in field.active_enemies()])
@@ -363,6 +361,10 @@ git rebase upstream/master
                 # # print(actions[0])
                 # # actions[0] = Actions.Kick(field.enemy_goal.center)
             else:
+                self.attacker_Ivan.run(field, actions)
+                self.attacker(field, actions, idKostyaAttacker, idIvanAttacker)
+                if field.allies[const.GK].is_used():
+                    self.GKLastState = GK(field, actions, self.GKLastState)
                 """code for yellow"""
                 # findNearestScorePoint(field, actions, 0, 2)
                 # enemies = field.active_enemies(True)
@@ -371,12 +373,15 @@ git rebase upstream/master
                 # actions[2] = Actions.BallGrab((nearestEnemyR.get_pos()-ballPos).arg())
                 # actions[0] = Actions.BallGrab((-field.ball.get_pos() + field.enemy_goal.center).arg())#TEST
                 #if play:
-                if field.allies[const.GK].is_used():
-                    self.YGKLastState = GK(field, actions, self.YGKLastState) 
-                #self.attacker(field, actions, 0, 2)
-                self.attacker_Ivan.run(field, actions)
-                self.attacker(field, actions, 2, 0)
-                # now = time()%8//4 # for change koef
+                # if field.allies[const.GK].is_used():
+                #     self.YGKLastState = GK(field, actions, self.YGKLastState) 
+                # #self.attacker(field, actions, 0, 2)
+                # # try: 
+                # #     self.attacker_Ivan.run(field, actions)
+                # # except:
+                # #     pass
+                # self.attacker(field, actions, idKostyaAttacker, idIvanAttacker)
+                # # now = time()%8//4 # for change koef
                 # match now:
                 #     case 0:
                 #         # pointF = field.ally_goal.center_down
@@ -540,12 +545,15 @@ git rebase upstream/master
                         """if this r is nearest to ball, but dont grab him, grab ball"""
                         # field.strategy_image.send_telemetry("status", "if this r is nearest to ball, but dont grab him, grab ball")
                         status = "if this r is nearest to ball, but dont grab him, grab ball"
-                        # actions[idxThisR] = Actions.BallGrab((field.ball.get_pos() - thisR.get_pos()).arg())
-                        actions[idxThisR] = Actions.BallGrab((-field.ball.get_pos() + field.enemy_goal.center).arg())#TEST
+                        actions[idxThisR] = Actions.BallGrab((field.ball.get_pos() - thisR.get_pos()).arg())
+                            
                     else:
                         """do do pass and wait for result"""
                         status = "do do pass and wait for result"
-                        actions[idxThisR] = Actions.GoToPoint(aux.Point(0, 0), (field.allies[idxOtherAttacker].get_pos()-thisR.get_pos()).arg())
+                        # actions[idxThisR] = Actions.GoToPoint(aux.Point(0, 0), (field.allies[idxOtherAttacker].get_pos()-thisR.get_pos()).arg())
+                        # goToNearestScorePoint(field, actions, idxThisR, idxOtherAttacker)
+                        actions[idxThisR] = Actions.BallGrab((ballPos-field.enemy_goal.center).arg())
+                        # actions[idxThisR] = Actions.BallGrab((field.ball.get_pos() - thisR.get_pos()).arg())
             elif nearestRToBall == field.allies[idxOtherAttacker]:
                     """if other attacker have ball"""
                     status = "if other attacker have ball"
@@ -621,7 +629,7 @@ git rebase upstream/master
                     pointGo = aux.point_on_line(ballPos, nearestEnemyR.get_pos(), 300)
                     actions[idxThisR] = Actions.GoToPoint(pointGo, (thisRPos-nearestEnemyR.get_pos()).arg())
                     field.allies[idxThisR].set_dribbler_speed(15)
-        # print(status, idxThisR)
+        print(status, idxThisR)
         field.strategy_image.send_telemetry("statusAttacker"+str(idxThisR), status)
 
 def Find_closest_bot_line(bots: list[rbt.Robot], p1: aux.Point, p2: aux.Point, type_: str) -> tuple[rbt.Robot, float]:

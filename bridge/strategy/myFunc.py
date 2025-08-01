@@ -182,7 +182,7 @@ def doPassNearAllly(field: fld.Field, actions: list[Action], idFrom = const.GK):
             field.strategy_image.send_telemetry("status pass", "have point")
             # field.strategy_image.draw_line(pointFrom, pointToPass, color=(255, 0, 0))
             # field.strategy_image.draw_circle(pointToPass, color=(255, 0, 0), size_in_mms=1000)
-            actions[idFrom] =  Actions.Kick(pointToPass, is_pass=True)
+            actions[idFrom] =  Actions.Kick(pointToPass)
         else:
             field.strategy_image.send_telemetry("status pass", "dont have point")
     if rToPass != None:

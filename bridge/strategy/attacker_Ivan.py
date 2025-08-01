@@ -15,12 +15,17 @@ class Attacker_Ivan():
         enemies = field.active_enemies(True)
         ally = field.active_allies(True)
         all_robots = enemies + ally
+        bK = None
         if len(ally) > 1:
             rbM: rbt.Robot
             rbK: rbt.Robot
-            rbM, rbK = GetMyRobot(self.id, field)
-            bM = rbM.get_pos()
-            bK = rbK.get_pos()
+            if len(field.active_allies(False)) == 2:
+                rbM, rbK = GetMyRobot(self.id, field)
+                bK = rbK.get_pos()
+                bM = rbM.get_pos()
+            else:
+                rbM = field.allies[self.id]
+                bM = rbM.get_pos()
 
         ball = field.ball.get_pos()
         ball_obj = field.ball
@@ -53,64 +58,77 @@ class Attacker_Ivan():
 
         fupA = field.ally_goal.frw_up
         fdownA = field.ally_goal.frw_down
+        try:
+            if len(enemies) != 0 and len(ally) > 1:
+                #поиск 2 тотчек для удара
+                nearest_robot = fld.find_nearest_robot(ball, all_robots)
+                point_to_goal_up = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
+                point_to_goal_down = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
+                point_to_goal = aux.find_nearest_point(bM, [point_to_goal_down, point_to_goal_up])
 
-        if len(enemies) != 0:
-            #поиск 2 тотчек для удара
-            nearest_robot = fld.find_nearest_robot(ball, all_robots)
-            point_to_goal_up = aux.Point(const.FIELD_DX / 2 * -field.polarity, const.FIELD_DY / 2)
-            point_to_goal_down = aux.Point(const.FIELD_DX / 2 * -field.polarity, -const.FIELD_DY / 2)
-            point_to_goal = aux.find_nearest_point(bM, [point_to_goal_down, point_to_goal_up])
-
-            #если ближайший робот союзник, то едет к точке удара, к которой не едет другой атакующий
-            if nearest_robot.color == const.COLOR:
-                not_my_point_to_goal = aux.find_nearest_point(bK, [point_to_goal_down, point_to_goal_up])
-                points = [point_to_goal_down, point_to_goal_up]
-                points.remove(not_my_point_to_goal)
-                my_point_to_goal = points[0]
-                field.strategy_image.draw_line(bM, my_point_to_goal, (0, 255, 255), 20)
-                if bK == aux.find_nearest_point(ball, [bM, bK]):
-                    if field.is_ball_in(rbK):
-                        bot_ , min_ = Find_closest_bot_line(enemies, bK, bM, "S")
-                        if min_ < 200:
-                            if aux.get_angle_between_points(bot_.get_pos(), bM, bK) > 0:
-                                bM = bM + aux.rotate(aux.Point(500,0), rbM.get_angle() + 3.14 / 5)
-                            else:
-                                bM = bM + aux.rotate(aux.Point(500,0), rbM.get_angle() - 3.14 / 5)
-                        # field.strategy_image.draw_circle(aux.nearest_point_on_circle(b2, b1, 1000), (0, 0, 0), 50)
-
-                        actions[self.id] = Actions.CatchBall(aux.nearest_point_on_circle(bM, bK, 1000), (ball - bM).arg())
+                #если ближайший робот союзник, то едет к точке удара, к которой не едет другой атакующий
+                if nearest_robot.color == const.COLOR:
+                    if len(field.active_allies(False)) == 2 and bK is not None:
+                            point = aux.find_nearest_point(ball, [bM, bK])
                     else:
-                        actions[self.id] = Actions.GoToPoint(my_point_to_goal, (my_point_to_goal - bM).arg())
-                else:
-                    actions[self.id] =Actions.BallGrab((ball - bM).arg())
-                    if field.is_ball_in(rbM):
-                        point_to_kick = find_point_to_goal(field, field.allies[self.id].get_pos())
-                        if point_to_kick is not None:
-                            actions[self.id] = Actions.Kick(point_to_kick)
-                        else: 
-                            actions[self.id] = Actions.Kick(field.allies[rbK.r_id].get_pos(), is_pass= True)
+                        point = bM
+                    if len(field.active_allies(False)) == 2 and bK is not None:
+                        not_my_point_to_goal = aux.find_nearest_point(bK, [point_to_goal_down, point_to_goal_up])
+                    else:
+                        not_my_point_to_goal = point_to_goal_down
+                    points = [point_to_goal_down, point_to_goal_up]
+                    points.remove(not_my_point_to_goal)
+                    my_point_to_goal = points[0]
+                    field.strategy_image.draw_line(bM, my_point_to_goal, (0, 255, 255), 20)
+                    if bK == point and len(field.active_allies(False)) == 2 and bK is not None:
+                        if field.is_ball_in(rbK):
+                            bot_ , min_ = Find_closest_bot_line(enemies, bK, bM, "S")
+                            if min_ < 200 and bK is not None:
+                                if aux.get_angle_between_points(bot_.get_pos(), bM, bK) > 0:
+                                    bM = bM + aux.rotate(aux.Point(500,0), rbM.get_angle() + 3.14 / 5)
+                                else:
+                                    bM = bM + aux.rotate(aux.Point(500,0), rbM.get_angle() - 3.14 / 5)
+                            # field.strategy_image.draw_circle(aux.nearest_point_on_circle(b2, b1, 1000), (0, 0, 0), 50)
 
-            else:
-                if field.is_ball_in(nearest_robot):
-                    Close_pass(nearest_robot, rbM, ball, field, actions)
+                            actions[self.id] = Actions.CatchBall(aux.nearest_point_on_circle(bM, bK, 1000), (ball - bM).arg())
+                        else:
+                            actions[self.id] = Actions.GoToPoint(my_point_to_goal, (my_point_to_goal - bM).arg())
+                    else:
+                        actions[self.id] =Actions.BallGrab((ball - bM).arg())
+                        if field.is_ball_in(rbM):
+                            point_to_kick = find_point_to_goal(field, field.allies[self.id].get_pos())
+                            if point_to_kick is not None:
+                                actions[self.id] = Actions.Kick(point_to_kick)
+                            else: 
+                                actions[self.id] = Actions.Kick(field.allies[rbK.r_id].get_pos(), is_pass= True)
+
                 else:
-                    if bM == aux.find_nearest_point(ball, [bM, bK]):
-                        point_to_grab = aux.find_nearest_point(bM, [ball + aux.rotate(aux.Point(110, 0), (ball - nearest_robot.get_pos()).arg() - 45 / 180 * 3.14), ball + aux.rotate(aux.Point(110, 0), (ball - nearest_robot.get_pos()).arg() + 45 / 180 * 3.14)])
-                        actions[self.id] = Actions.CatchBall(point_to_grab, (ball - bM).arg())
-                        if (ball - bM).mag() <= 120:
-                            actions[self.id] = Actions.BallGrab((ball - bM).arg())
-                            if field.is_ball_in(rbM):
-                                point_to_goal_now = find_point_to_goal(field, bM)
-                                actions[self.id] = Actions.Kick(point_to_goal)
-                            if field.is_ball_in(rbM) and rbK.r_id is not None:
-                                actions[self.id] = Actions.Kick(bK, is_pass= True)
-                            else:
-                                actions[self.id] = Actions.Kick(field.enemy_goal.center)
-        else:
-            if bM == aux.find_nearest_point(ball, [i.get_pos() for i in field.active_allies()]):
-                actions[self.id] = Actions.Kick(field.enemy_goal.center)
+                    if field.is_ball_in(nearest_robot):
+                        Close_pass(nearest_robot, rbM, ball, field, actions)
+                    else:
+                        if len(field.active_allies(False)) == 2 and bK is not None:
+                            point = aux.find_nearest_point(ball, [bM, bK])
+                        else:
+                            point = bM
+                        if bM == point:
+                            point_to_grab = aux.find_nearest_point(bM, [ball + aux.rotate(aux.Point(110, 0), (ball - nearest_robot.get_pos()).arg() - 45 / 180 * 3.14), ball + aux.rotate(aux.Point(110, 0), (ball - nearest_robot.get_pos()).arg() + 45 / 180 * 3.14)])
+                            actions[self.id] = Actions.CatchBall(point_to_grab, (ball - bM).arg())
+                            if (ball - bM).mag() <= 120:
+                                actions[self.id] = Actions.BallGrab((ball - bM).arg())
+                                if field.is_ball_in(rbM):
+                                    point_to_goal_now = find_point_to_goal(field, bM)
+                                    actions[self.id] = Actions.Kick(point_to_goal)
+                                if field.is_ball_in(rbM) and bK is not None:
+                                    actions[self.id] = Actions.Kick(bK, is_pass= True)
+                                else:
+                                    actions[self.id] = Actions.Kick(field.enemy_goal.center)
             else:
-                actions[self.id] = Actions.CatchBall(bM, (ball - bM).arg())
+                if bM == aux.find_nearest_point(ball, [i.get_pos() for i in field.active_allies()]):
+                    actions[self.id] = Actions.Kick(field.enemy_goal.center)
+                else:
+                    actions[self.id] = Actions.CatchBall(bM, (ball - bM).arg())
+        except:
+            pass
 def Find_closest_bot_line(bots: list[rbt.Robot], p1: aux.Point, p2: aux.Point, type_: str) -> tuple[rbt.Robot, float]:
     min_: float = 9999999999
     bot_: Optional[rbt.Robot] = None
