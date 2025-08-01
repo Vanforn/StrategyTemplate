@@ -12,10 +12,10 @@ class Attacker_Ivan():
         self.id = id
 
     def run(self, field: fld.Field, actions: list[Optional[Action]]) -> None:
-        enemies = field.active_enemies(False)
-        ally = field.active_allies(False)
+        enemies = field.active_enemies(True)
+        ally = field.active_allies(True)
         all_robots = enemies + ally
-        if len(ally) != 0:
+        if len(ally) > 1:
             rbM: rbt.Robot
             rbK: rbt.Robot
             rbM, rbK = GetMyRobot(self.id, field)
@@ -25,7 +25,7 @@ class Attacker_Ivan():
         ball = field.ball.get_pos()
         ball_obj = field.ball
 
-        centerEnemy = field.enemy_goal.center
+        centerEnemy = field.enemy_goal.center   
         centerAlly = field.ally_goal.center
         frw = field.enemy_goal.frw
 
@@ -136,9 +136,14 @@ def Close_pass(bot1: rbt.Robot, bot2: rbt.Robot, target: aux.Point,field: fld.Fi
     botPos1 = bot1.get_pos()
     botPos2 = bot2.get_pos()
     enemies = field.enemies.copy()
+    enemies_2 = []
     #print(bot1.r_self.id)
-    enemies.remove(bot1)
-    botClose = aux.find_nearest_point(field.ball.get_pos(),[enemies[0].get_pos(), enemies[1].get_pos()])#[enemies[0].get_pos(), enemies[1].get_pos()]
+    #enemies.remove(bot1)
+    if len(enemies) > 0:
+        for i in enemies:
+            if i != bot1:
+                enemies_2.append(i)
+    botClose = aux.find_nearest_point(field.ball.get_pos(),[i.get_pos() for i in enemies])#[enemies[0].get_pos(), enemies[1].get_pos()]
     field.strategy_image.draw_circle(botClose, (255, 0, 255), 50)
     vec = aux.Point(150, 0)
     vec_first = aux.rotate(vec, (botPos1 - botPos2).arg())
@@ -157,9 +162,10 @@ def GetMyRobot(my_id: int, field: fld.Field) -> tuple[rbt.Robot, rbt.Robot]:
 
     my_self.id = self.id моего робота
     """
-    bots = field.active_allies(True)
-    bots_id = [bots[0].r_id, bots[1].r_id, bots[2].r_id]
-    bots_id.remove(my_id)
+    bots = field.active_allies(False)
+    bots_id = [i.r_id for i in bots]
+    if my_id in bots_id:
+        bots_id.remove(my_id)
     not_my_id = bots_id[0]
     return field.allies[my_id], field.allies[not_my_id]
 
